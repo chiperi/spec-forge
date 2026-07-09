@@ -98,12 +98,14 @@
 **Acceptance:** **Given** тека з кодом, **When** `analyze --backend claude`, **Then** у
 `specifications/product/specs/002-existing/` створюються `spec.md` і `review.md` з посиланнями на файли.
 
-### US-12 — Діалоговий `/spec-forge` без API-ключа (Priority: P1)
-Як користувач Claude Max (без API-кредитів), я хочу `/spec-forge <ціль>`, щоб прямо в діалозі
-побудувати спеку нашою структурою силами субагентів.
+### US-12 — Підкоманди `/spec-forge` нативно, без API-ключа (Priority: P1)
+Як користувач Claude Max (без API-кредитів), я хочу викликати **точні підкоманди** —
+`/spec-forge spec`, `/spec-forge plan`, `/spec-forge analyze` тощо, — щоб виконати саме той
+функціонал прямо в Claude Code силами субагентів.
 **Acceptance:** **Given** встановлені команда + субагенти й немає `ANTHROPIC_API_KEY`,
-**When** `/spec-forge`, **Then** асистент інтервʼює й делегує BA/SA, створюючи файли у
-`specifications/` — без жодного API-виклику.
+**When** `/spec-forge plan` (або `spec`/`tasks`/`analyze`), **Then** диспетчер делегує потрібному
+субагенту й пише артефакт у `specifications/` — без жодного API-виклику; **When** `/spec-forge validate`
+(чи `init`/`export`/`deploy`/`status`), **Then** виконується локальний CLI.
 
 ### Edge Cases
 - Незакриті `[NEEDS CLARIFICATION]` **блокують** перехід до наступної фази.
@@ -138,11 +140,12 @@
   при першому запуску (ідемпотентно) і надавати команду її прибрати; opt-out `SPEC_FORGE_NO_SLASH=1`.
 - **FR-015:** Система ПОВИННА мати brownfield-режим `analyze`: читати (обмежено) код наявного проєкту
   і драфтити **reverse-спеку + рев'ю/gap-документ** in-place, не змінюючи код.
-- **FR-016:** Система ПОВИННА надавати **діалоговий нативний `/spec-forge`**: будувати спеку в Claude Code
-  через інтервʼю + делегування рольовим субагентам (BA→SA + опційні Designer/Developer), з людськими
-  гейтами, **без `ANTHROPIC_API_KEY`** (на підписці).
+- **FR-016:** Система ПОВИННА надавати `/spec-forge` як **диспетчер точних підкоманд** (той самий набір,
+  що й CLI): контентні (`spec`/`plan`/`tasks`/`analyze`) виконуються **нативно в Claude Code** через
+  рольових субагентів — **без `ANTHROPIC_API_KEY`** (на підписці); механічні (`init`/`validate`/`export`/
+  `deploy`/`status`) делегуються локальному CLI. Людський гейт після кожної контентної фази.
 - **FR-017:** Система ПОВИННА встановлювати/прибирати рольові субагенти у `~/.claude/agents/` разом зі
-  slash-командою; команда **self-upgrade** за версією.
+  slash-командою (вкл. `reverse-analyst`/`reviewer` для `analyze`); команда **self-upgrade** за версією.
 
 ### Non-Functional (seed; деталі → `architecture/nfr.md`)
 - **NFR-001:** Детермінований скафолдинг `init` ПОВИНЕН завершуватись < 5 с на типовому проєкті.

@@ -19,7 +19,7 @@ def test_install_writes_command_and_agents(tmp_path):
     assert result.command_created
     assert _cmd(tmp_path).exists()
     srcs = bundled_agent_files()
-    assert len(result.agents_created) == len(srcs) == 5
+    assert len(result.agents_created) == len(srcs) == 7
     for src in srcs:
         dst = _agents(tmp_path) / src.name
         assert dst.exists()
@@ -45,12 +45,22 @@ def test_command_self_upgrades_on_old_version(tmp_path):
     assert f"spec-forge-command v{WRAPPER_VERSION}" in cmd.read_text(encoding="utf-8")
 
 
-def test_wrapper_has_orchestrator_markers(tmp_path):
+def test_wrapper_is_subcommand_dispatcher(tmp_path):
     ensure_installed(tmp_path)
     body = _cmd(tmp_path).read_text(encoding="utf-8")
-    for marker in ("business-analyst", "solution-architect", "Task", "[NEEDS CLARIFICATION]", "v2"):
+    # диспетчер за підкомандами (точний функціонал CLI), не «ціль своїми словами»
+    for marker in ("v3", "диспетчер", "підкоманда"):
         assert marker in body
-    assert "spec-forge $ARGUMENTS" not in body  # старого CLI-passthrough нема
+    # контентні підкоманди делегуються рольовим субагентам
+    for sub in ("spec", "plan", "tasks", "analyze"):
+        assert f"`{sub}" in body
+    for agent in ("business-analyst", "solution-architect", "developer", "reverse-analyst", "reviewer"):
+        assert agent in body
+    for marker in ("Task", "[NEEDS CLARIFICATION]"):
+        assert marker in body
+    # механічні підкоманди йдуть у безкоштовний CLI
+    for sub in ("init", "validate", "export", "deploy", "status"):
+        assert sub in body
 
 
 def test_remove_removes_command_and_agents(tmp_path):
@@ -59,7 +69,7 @@ def test_remove_removes_command_and_agents(tmp_path):
     other.write_text("keep me", encoding="utf-8")
     result = remove(tmp_path)
     assert result.command_removed
-    assert len(result.agents_removed) == 5
+    assert len(result.agents_removed) == 7
     assert not _cmd(tmp_path).exists()
     assert other.exists()  # чужий агент не чіпаємо
     result2 = remove(tmp_path)
@@ -75,4 +85,6 @@ def test_bundled_agents_enumeration():
         "designer.md",
         "developer.md",
         "code-reviewer.md",
+        "reverse-analyst.md",
+        "reviewer.md",
     }

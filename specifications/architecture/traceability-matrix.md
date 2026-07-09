@@ -24,7 +24,7 @@
 | FR-013 / US-9 (PDF export) | ADR-0003 | T-019 | test_export_*, test_export_cli_writes_pdf | ✅ |
 | FR-014 / US-10 (slash-команда) | ADR-0004 | T-020 | test_integrations, test_command_install_uninstall_cli | ✅ |
 | FR-015 / US-11 (analyze brownfield) | ADR-0005 | T-021 | test_codescan, test_cli_analyze | ✅ |
-| FR-016 / US-12 (діалоговий оркестратор, no API key) | ADR-0006 | T-022 | test_wrapper_has_orchestrator_markers | ✅ |
-| FR-017 (install/remove субагентів + self-upgrade) | ADR-0006 | T-023 | test_install_writes_command_and_agents, test_command_self_upgrades_on_old_version | ✅ |
+| FR-016 / US-12 (диспетчер підкоманд, no API key) | ADR-0006 | T-022, T-026 | test_wrapper_is_subcommand_dispatcher | ✅ |
+| FR-017 (install/remove 7 субагентів + self-upgrade) | ADR-0006 | T-023, T-026 | test_install_writes_command_and_agents, test_command_self_upgrades_on_old_version, test_bundled_agents_enumeration | ✅ |
 
 Легенда: ✅ покрито · 🟡 частково (mock/stub) · ⬜ ще ні.

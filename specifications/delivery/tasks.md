@@ -36,11 +36,12 @@
 - [x] **T-019** `export` — PDF-знімок усіх файлів `specifications/` (таймстемп, тека `exports/`) через fpdf2 + вбудований DejaVuSans (FR-013/US-9, ADR-0003)
 - [x] **T-020** авто-реєстрація slash-команди Claude Code `/spec-forge` + `command install/uninstall` (FR-014/US-10, ADR-0004)
 - [x] **T-021** `analyze` — brownfield: `codescan` (обмежений читач коду) + персони `reverse-analyst`/`reviewer` + reverse-спека + рев'ю in-place (FR-015/US-11, ADR-0005)
-- [x] **T-022** переписати `/spec-forge` на **діалоговий нативний оркестратор** (BA→SA + опційні), без API-ключа (FR-016/US-12, ADR-0006)
-- [x] **T-023** встановлення 5 рольових субагентів у `~/.claude/agents/` + self-upgrade команди + `command install --force` (FR-017)
-- [x] **T-024** тести install/remove/markers/self-upgrade/enumeration
+- [x] **T-022** `/spec-forge` v3 — **диспетчер точних підкоманд** (spec/plan/tasks/analyze нативно; init/validate/… через CLI), без API-ключа (FR-016/US-12, ADR-0006)
+- [x] **T-023** встановлення 7 рольових субагентів у `~/.claude/agents/` (+ `reverse-analyst`/`reviewer` для analyze) + self-upgrade + `command install --force` (FR-017)
+- [x] **T-024** тести install/remove/dispatcher-markers/self-upgrade/enumeration
 - [x] **T-025** docs: ADR-0006 + README-секція
+- [x] **T-026** субагенти `reverse-analyst` + `reviewer` (бандл `ai/agents/`) для нативного `/spec-forge analyze`
 
 ---
-**ВСІ задачі (T-001…T-025 + фази) виконано.** Команди: `init · spec · plan · tasks · analyze · validate · deploy · status · export · command`.
-`/spec-forge` — діалоговий нативний оркестратор (на підписці, без API-ключа). 47 тестів, ruff clean, coverage 91%.
+**ВСІ задачі (T-001…T-026 + фази) виконано.** Команди: `init · spec · plan · tasks · analyze · validate · deploy · status · export · command`.
+`/spec-forge <підкоманда>` — диспетчер точних підкоманд (контент нативно на підписці, механічні через CLI). 47 тестів, ruff clean, coverage 91%.

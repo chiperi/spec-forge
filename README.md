@@ -47,17 +47,24 @@ spec-forge analyze /path/to/existing-project --backend claude
 - Skips `node_modules`, `.venv`, `.git`, binaries, oversized files. No `init` required.
 - `--backend mock` scaffolds offline (echo); real analysis needs `--backend claude` + `ANTHROPIC_API_KEY`.
 
-## Claude Code integration — conversational `/spec-forge` (no API key)
+## Claude Code integration — `/spec-forge` subcommands (no API key)
 
-On first run, spec-forge registers a Claude Code slash command **and 5 role subagents**
-(`business-analyst`, `solution-architect`, `designer`, `developer`, `code-reviewer`) under `~/.claude/`.
-Then `/spec-forge <goal>` builds the spec **conversationally, natively in Claude Code**: it interviews
-you, delegates drafting to the role subagents, and writes files into `specifications/`. It runs on your
-Claude subscription — **no `ANTHROPIC_API_KEY` / API credits needed** (the API path is only for the CLI
-`--backend claude`).
+On first run, spec-forge registers a Claude Code slash command **and 7 role subagents**
+(`business-analyst`, `solution-architect`, `developer`, `designer`, `code-reviewer`, `reverse-analyst`,
+`reviewer`) under `~/.claude/`. `/spec-forge` is a **dispatcher over the exact CLI subcommands** — you
+run the specific one you want:
 
-Flow: **BA** (interview → `spec.md`) → gate → **SA** (`plan.md` + ADRs + contracts) → gate → optional
-**Designer** / **Developer** (tasks). Reload Claude Code after install to see `/spec-forge`.
+| Subcommand | What runs |
+|---|---|
+| `/spec-forge spec [desc]` | **native** — delegates to `business-analyst` → `specifications/product/specs/001-feature/spec.md` |
+| `/spec-forge plan` | **native** — `solution-architect` → `architecture/plan.md` + ADRs + contracts |
+| `/spec-forge tasks` | **native** — `developer` → `delivery/tasks.md` |
+| `/spec-forge analyze [dir]` | **native** — `reverse-analyst` + `reviewer` → `product/specs/002-existing/` |
+| `/spec-forge init · validate · export · deploy · status` | runs the local **CLI** (deterministic, free) |
+
+Content subcommands run **natively in Claude Code** on your Claude subscription — **no `ANTHROPIC_API_KEY`
+/ API credits** (the API path is only for the CLI `--backend claude`). A human gate follows each content
+phase. Reload Claude Code after install to see `/spec-forge`.
 
 - Install / refresh: `spec-forge command install [--project] [--force]` · remove: `spec-forge command uninstall`.
 - Opt out of auto-registration: `export SPEC_FORGE_NO_SLASH=1`.
