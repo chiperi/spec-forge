@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import difflib
+import os
 from pathlib import Path
 
 import typer
 
+from . import integrations
 from .backends import get_backend
 from .deploy import deploy_root
 from .export_pdf import export_bundle
@@ -20,6 +22,27 @@ app = typer.Typer(
     help="spec-forge — генератор якісних специфікацій для будь-якого проєкту.",
     no_args_is_help=True,
 )
+
+
+@app.callback()
+def _main(ctx: typer.Context) -> None:
+    """Автододавання slash-команди Claude Code /spec-forge (opt-out: SPEC_FORGE_NO_SLASH=1)."""
+    if ctx.invoked_subcommand in (None, "command"):
+        return
+    if os.environ.get("SPEC_FORGE_NO_SLASH"):
+        return
+    try:
+        path, created = integrations.ensure_installed()
+    except OSError:
+        return
+    if created:
+        typer.secho(
+            f"↪ додано slash-команду Claude Code: /spec-forge ({path})", fg=typer.colors.BLUE
+        )
+
+
+command_app = typer.Typer(help="Slash-команда Claude Code /spec-forge (add/remove).", no_args_is_help=True)
+app.add_typer(command_app, name="command")
 
 
 # ---- helpers ----------------------------------------------------------------
@@ -247,6 +270,29 @@ def status(path: Path = typer.Argument(Path("."), help="Тека проєкту"
         typer.secho(f"→ наступна фаза: {nxt}", fg=typer.colors.BLUE)
     else:
         typer.secho("Усі фази пройдено.", fg=typer.colors.GREEN)
+
+
+@command_app.command("install")
+def command_install(
+    project: bool = typer.Option(False, "--project", help="У поточний проєкт замість глобально"),
+) -> None:
+    """Додати slash-команду /spec-forge (глобально або у проєкт)."""
+    root = Path(".") if project else None
+    path, created = integrations.ensure_installed(root)
+    label = "додано" if created else "вже існує"
+    typer.secho(f"✅ /spec-forge {label}: {path}", fg=typer.colors.GREEN)
+
+
+@command_app.command("uninstall")
+def command_uninstall(
+    project: bool = typer.Option(False, "--project", help="З поточного проєкту замість глобально"),
+) -> None:
+    """Прибрати slash-команду /spec-forge."""
+    root = Path(".") if project else None
+    path, removed = integrations.remove(root)
+    color = typer.colors.GREEN if removed else typer.colors.YELLOW
+    label = "✅ прибрано" if removed else "= не було"
+    typer.secho(f"{label}: {path}", fg=color)
 
 
 if __name__ == "__main__":

@@ -86,6 +86,12 @@
 **Acceptance:** **Given** є bundle, **When** `export`, **Then** у `exports/` створюється
 `spec-forge-export-<timestamp>.pdf` з усіма текстовими файлами `specifications/`.
 
+### US-10 — Slash-команда Claude Code (Priority: P3)
+Як користувач Claude Code, я хочу викликати `/spec-forge …` у чаті, і щоб обгортка зʼявлялась/зникала
+разом із тулом.
+**Acceptance:** **Given** встановлений тул, **When** перший запуск CLI, **Then** створюється
+`~/.claude/commands/spec-forge.md`; `spec-forge command uninstall` — прибирає.
+
 ### Edge Cases
 - Незакриті `[NEEDS CLARIFICATION]` **блокують** перехід до наступної фази.
 - Повторний запуск команди **ідемпотентний** (не дублює й не псує артефакти).
@@ -115,6 +121,8 @@
   збереженням ручних правок (merge + diff-підтвердження, без сліпого перезапису).
 - **FR-013:** Система ПОВИННА експортувати всі файли `specifications/` в **єдиний PDF** (імʼя з
   таймстемпом, окрема тека `exports/`) для командного рев'ю.
+- **FR-014:** Система ПОВИННА автоматично реєструвати slash-команду Claude Code `/spec-forge`
+  при першому запуску (ідемпотентно) і надавати команду її прибрати; opt-out `SPEC_FORGE_NO_SLASH=1`.
 
 ### Non-Functional (seed; деталі → `architecture/nfr.md`)
 - **NFR-001:** Детермінований скафолдинг `init` ПОВИНЕН завершуватись < 5 с на типовому проєкті.

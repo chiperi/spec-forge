@@ -66,6 +66,17 @@ def test_export_cli_writes_pdf(tmp_path):
     assert len(pdfs) == 1
 
 
+def test_command_install_uninstall_cli(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    r1 = runner.invoke(app, ["command", "install", "--project"])
+    assert r1.exit_code == 0, r1.output
+    wrapper = tmp_path / ".claude" / "commands" / "spec-forge.md"
+    assert wrapper.exists()
+    r2 = runner.invoke(app, ["command", "uninstall", "--project"])
+    assert r2.exit_code == 0
+    assert not wrapper.exists()
+
+
 def test_status_reflects_phases(tmp_path):
     _init(tmp_path)
     result = runner.invoke(app, ["status", str(tmp_path / "proj")])

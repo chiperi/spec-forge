@@ -22,5 +22,6 @@
 | FR-009 (lifecycle gates) | plan §5 state | T-017 | test_state, test_status_reflects_phases | ✅ |
 | FR-012 / US-8 (re-spec) | plan §4 respec | T-016 | test_respec_diff_confirm | ✅ |
 | FR-013 / US-9 (PDF export) | ADR-0003 | T-019 | test_export_*, test_export_cli_writes_pdf | ✅ |
+| FR-014 / US-10 (slash-команда) | ADR-0004 | T-020 | test_integrations, test_command_install_uninstall_cli | ✅ |
 
 Легенда: ✅ покрито · 🟡 частково (mock/stub) · ⬜ ще ні.

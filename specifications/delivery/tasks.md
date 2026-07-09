@@ -34,7 +34,8 @@
 - [x] **T-018** CI (`.github/workflows/ci.yml`): matrix ubuntu/macos/windows, ruff + pytest, coverage ≥85% (NFR-006)
 
 - [x] **T-019** `export` — PDF-знімок усіх файлів `specifications/` (таймстемп, тека `exports/`) через fpdf2 + вбудований DejaVuSans (FR-013/US-9, ADR-0003)
+- [x] **T-020** авто-реєстрація slash-команди Claude Code `/spec-forge` + `command install/uninstall` (FR-014/US-10, ADR-0004)
 
 ---
-**ВСІ задачі (T-001…T-019 + фази) виконано.** Команди: `init · spec · plan · tasks · validate · deploy · status · export`.
-Бекенди: Mock + Claude (Anthropic Messages API). 29 тестів, ruff clean, coverage 92%.
+**ВСІ задачі (T-001…T-020 + фази) виконано.** Команди: `init · spec · plan · tasks · validate · deploy · status · export · command`.
+Бекенди: Mock + Claude (Anthropic Messages API). 33 тести, ruff clean, coverage 92%.

@@ -15,6 +15,18 @@ spec-forge --help
 - Upgrade: `uv tool upgrade spec-forge` · reinstall: add `--force`.
 - If `spec-forge` isn't found, put `~/.local/bin` on your `PATH` (`uv tool update-shell`).
 
+## Claude Code integration (`/spec-forge`)
+
+On first run, spec-forge auto-registers a Claude Code slash command at
+`~/.claude/commands/spec-forge.md`, so you can call `/spec-forge <args>` in chat.
+
+- Add/remove explicitly: `spec-forge command install [--project]` · `spec-forge command uninstall`.
+- Opt out of auto-registration: `export SPEC_FORGE_NO_SLASH=1`.
+- The wrapper self-guards: if `spec-forge` isn't on `PATH` it does nothing (safe to leave behind).
+
+> Note: Python/uv has no uninstall hooks, so `uv tool uninstall` can't auto-remove the wrapper —
+> run `spec-forge command uninstall` (or delete the file). Reload Claude Code to see the command.
+
 ## Develop (from source)
 
 ```bash
