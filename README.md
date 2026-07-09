@@ -21,6 +21,7 @@ uv run spec-forge tasks <dir> --backend claude                # → delivery/tas
 uv run spec-forge validate <dir>                              # quality gates
 uv run spec-forge deploy   <dir>                              # root symlinks for tool discovery
 uv run spec-forge status   <dir>                              # lifecycle progress
+uv run spec-forge export   <dir>                              # single timestamped PDF of all spec files (for team review)
 ```
 
 - **Stacks:** `python` · `node` · `go` (pluggable stack profiles).

@@ -21,5 +21,6 @@
 | US-3/4/5/6 | plan §4 | T-P1/P2/012-014 | test_cli_phases | ✅ |
 | FR-009 (lifecycle gates) | plan §5 state | T-017 | test_state, test_status_reflects_phases | ✅ |
 | FR-012 / US-8 (re-spec) | plan §4 respec | T-016 | test_respec_diff_confirm | ✅ |
+| FR-013 / US-9 (PDF export) | ADR-0003 | T-019 | test_export_*, test_export_cli_writes_pdf | ✅ |
 
 Легенда: ✅ покрито · 🟡 частково (mock/stub) · ⬜ ще ні.

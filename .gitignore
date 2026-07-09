@@ -12,6 +12,9 @@ htmlcov/
 # Runtime lifecycle state (per-project)
 .spec-forge/
 
+# Generated PDF snapshots
+exports/
+
 # Local secrets / personal overrides
 .env
 .claude/settings.local.json

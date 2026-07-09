@@ -9,6 +9,7 @@ import typer
 
 from .backends import get_backend
 from .deploy import deploy_root
+from .export_pdf import export_bundle
 from .models import InterviewAnswers
 from .profiles import PROFILES, get_profile
 from .scaffolder import BundleExistsError, scaffold
@@ -221,6 +222,17 @@ def deploy(path: Path = typer.Argument(Path("."), help="Тека проєкту"
     typer.secho(
         f"✅ Розгорнуто {len(created)} pointer-ів: {', '.join(created)}", fg=typer.colors.GREEN
     )
+
+
+@app.command()
+def export(
+    path: Path = typer.Argument(Path("."), help="Тека проєкту"),
+    out: str = typer.Option("exports", "--out", help="Тека для PDF"),
+) -> None:
+    """Експорт усіх файлів specifications/ у єдиний PDF з таймстемпом (FR-013)."""
+    _require_bundle(path)
+    pdf = export_bundle(path, out)
+    typer.secho(f"✅ PDF-знімок: {pdf}", fg=typer.colors.GREEN)
 
 
 @app.command()

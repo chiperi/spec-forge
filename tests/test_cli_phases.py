@@ -58,6 +58,14 @@ def test_respec_diff_confirm(tmp_path):
     assert "v3" in spec_file.read_text(encoding="utf-8")
 
 
+def test_export_cli_writes_pdf(tmp_path):
+    _init(tmp_path)
+    result = runner.invoke(app, ["export", str(tmp_path / "proj")])
+    assert result.exit_code == 0, result.output
+    pdfs = list((tmp_path / "proj" / "exports").glob("*.pdf"))
+    assert len(pdfs) == 1
+
+
 def test_status_reflects_phases(tmp_path):
     _init(tmp_path)
     result = runner.invoke(app, ["status", str(tmp_path / "proj")])
