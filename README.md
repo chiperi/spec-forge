@@ -32,6 +32,21 @@ uv tool install git+https://github.com/chiperi/spec-forge.git
 The `/spec-forge` wrapper is then auto-registered on first run — see *Claude Code integration* below.
 </details>
 
+## Analyze an existing project (brownfield)
+
+Point spec-forge at an existing codebase to reverse-engineer its spec **and** a review/gap report —
+without touching the code:
+
+```bash
+spec-forge analyze /path/to/existing-project --backend claude
+# → <project>/specifications/product/specs/002-existing/spec.md   (what it does today)
+# → <project>/specifications/product/specs/002-existing/review.md  (where/what to fix, is it correct)
+```
+
+- `--only both|spec|review` · `--slug <name>` · `--path <dir>` (write elsewhere) · `--max-chars` / `--max-file-bytes`.
+- Skips `node_modules`, `.venv`, `.git`, binaries, oversized files. No `init` required.
+- `--backend mock` scaffolds offline (echo); real analysis needs `--backend claude` + `ANTHROPIC_API_KEY`.
+
 ## Claude Code integration (`/spec-forge`)
 
 On first run, spec-forge auto-registers a Claude Code slash command at

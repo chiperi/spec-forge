@@ -8,7 +8,7 @@ from pathlib import Path
 
 import typer
 
-from . import integrations
+from . import codescan, integrations
 from .backends import get_backend
 from .deploy import deploy_root
 from .export_pdf import export_bundle
@@ -97,6 +97,17 @@ def _write_artifact(out: Path, new: str, *, updating: bool, yes: bool) -> bool:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(new, encoding="utf-8")
     return True
+
+
+def _build_code_context(code_ctx: str, bundle: Path, instruction: str, extra: str = "") -> str:
+    parts = ["# Codebase\n" + code_ctx]
+    agents = bundle / "ai" / "AGENTS.md"
+    if agents.exists():
+        parts.append("# Project context (AGENTS.md)\n" + agents.read_text(encoding="utf-8"))
+    if extra:
+        parts.append(extra)
+    parts.append(instruction)
+    return "\n\n".join(parts)
 
 
 def _draft(bundle: Path, persona: str, context: str, backend: str, model: str | None) -> str:
@@ -256,6 +267,57 @@ def export(
     _require_bundle(path)
     pdf = export_bundle(path, out)
     typer.secho(f"✅ PDF-знімок: {pdf}", fg=typer.colors.GREEN)
+
+
+@app.command()
+def analyze(
+    source: Path = typer.Argument(..., help="Тека НАЯВНОГО проєкту для аналізу коду"),
+    path: Path = typer.Option(None, "--path", help="Куди писати specifications/ (типово = source)"),
+    slug: str = typer.Option("002-existing", "--slug", help="Папка під product/specs/"),
+    only: str = typer.Option("both", "--only", help="both | spec | review"),
+    max_file_bytes: int = typer.Option(100_000, "--max-file-bytes", help="Ліміт на файл (байт)"),
+    max_chars: int = typer.Option(200_000, "--max-chars", help="Ліміт контексту (символів)"),
+    backend: str = typer.Option("mock", "--backend", help="AI-бекенд: mock | claude"),
+    model: str = typer.Option(None, "--model", help="Модель для claude-бекенду"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Перезаписати без підтвердження"),
+) -> None:
+    """(Reverse) Спека + рев'ю НАЯВНОГО коду (brownfield). Реальний зміст — `--backend claude`."""
+    if only not in ("both", "spec", "review"):
+        raise typer.BadParameter("--only має бути: both | spec | review")
+    if not source.is_dir():
+        typer.secho(f"❌ Немає теки: {source}", fg=typer.colors.RED)
+        raise typer.Exit(1)
+
+    target = path or source
+    bundle = target / "specifications"
+    try:
+        code_ctx = codescan.scan_codebase(source, max_file_bytes=max_file_bytes, max_total_chars=max_chars)
+    except OSError as exc:
+        typer.secho(f"❌ Скан коду: {exc}", fg=typer.colors.RED)
+        raise typer.Exit(1) from exc
+
+    if only in ("both", "spec"):
+        ctx = _build_code_context(
+            code_ctx, bundle,
+            "Виведи ФАКТИЧНУ специфікацію продукту (spec.md) за цим кодом, з посиланнями на файли.",
+        )
+        _run_phase(target, "analyze", "reverse-analyst", ctx, f"product/specs/{slug}/spec.md", backend, model, yes)
+
+    if only in ("both", "review"):
+        inferred = bundle / "product" / "specs" / slug / "spec.md"
+        extra = ""
+        if inferred.exists():
+            extra = "# Inferred spec (spec.md)\n" + inferred.read_text(encoding="utf-8")
+        expected = _read_first_spec(bundle)
+        if expected and (not inferred.exists() or expected != inferred.read_text(encoding="utf-8")):
+            extra += "\n\n# Expected spec (наявна)\n" + expected
+        ctx = _build_code_context(
+            code_ctx, bundle,
+            "Склади рев'ю/gap-документ: що реалізовано, чого бракує/невірно, ДЕ виправити "
+            "(файл+секція), severity; вердикт чи все написано як треба.",
+            extra=extra,
+        )
+        _run_phase(target, "review", "reviewer", ctx, f"product/specs/{slug}/review.md", backend, model, yes)
 
 
 @app.command()

@@ -1,4 +1,4 @@
-from spec_forge.backends import ClaudeBackend, MockBackend, get_backend
+from spec_forge.backends import PERSONA_SYSTEM, ClaudeBackend, MockBackend, get_backend
 
 import pytest
 
@@ -26,3 +26,14 @@ def test_mock_draft_contains_persona_and_context():
     out = MockBackend().draft("business-analyst", "hello world")
     assert "business-analyst" in out
     assert "hello world" in out
+
+
+def test_reverse_personas_present():
+    assert "reverse-analyst" in PERSONA_SYSTEM
+    assert "reviewer" in PERSONA_SYSTEM
+
+
+def test_mock_draft_reviewer_echoes():
+    out = MockBackend().draft("reviewer", "CTX-DATA")
+    assert "reviewer" in out
+    assert "CTX-DATA" in out
