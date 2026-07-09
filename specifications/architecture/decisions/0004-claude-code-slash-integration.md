@@ -16,6 +16,8 @@
 - **Самозахист обгортки:** вона спершу перевіряє `command -v spec-forge`; якщо тула немає —
   нічого не виконує (тож залишковий файл після `uv tool uninstall` нешкідливий).
 - **Opt-out:** `SPEC_FORGE_NO_SLASH=1`.
+- **Звʼязка з `uv tool` (Спосіб 1):** `install.sh` / `uninstall.sh` (+ `just install|uninstall`)
+  ставлять/знімають CLI і slash-обгортку **разом** — бо wheel-хуків на install/uninstall не існує.
 
 ## Consequences
 **Позитивні**

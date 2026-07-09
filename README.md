@@ -5,15 +5,32 @@ Stack-agnostic, spec-driven development CLI: turn any project into a complete,
 drafting across BA / SA / Developer personas, quality gates, lifecycle state, and
 one-command tool-discovery deploy.
 
-## Install (global CLI)
+## Install (CLI + Claude Code command together)
+
+Installs the global CLI **and** registers the `/spec-forge` Claude Code command in one step:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/chiperi/spec-forge/main/install.sh | bash
+# or from a clone:   just install     (same as ./install.sh)
+```
+
+Remove **both** together:
+
+```bash
+./uninstall.sh          # or:  just uninstall
+```
+
+- Upgrade: re-run the installer (or `uv tool upgrade spec-forge`).
+- If `spec-forge` isn't found, put `~/.local/bin` on `PATH` (`uv tool update-shell`).
+
+<details><summary>Raw uv (CLI only)</summary>
 
 ```bash
 uv tool install git+https://github.com/chiperi/spec-forge.git
-spec-forge --help
 ```
 
-- Upgrade: `uv tool upgrade spec-forge` · reinstall: add `--force`.
-- If `spec-forge` isn't found, put `~/.local/bin` on your `PATH` (`uv tool update-shell`).
+The `/spec-forge` wrapper is then auto-registered on first run — see *Claude Code integration* below.
+</details>
 
 ## Claude Code integration (`/spec-forge`)
 
