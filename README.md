@@ -5,10 +5,23 @@ Stack-agnostic, spec-driven development CLI: turn any project into a complete,
 drafting across BA / SA / Developer personas, quality gates, lifecycle state, and
 one-command tool-discovery deploy.
 
-## Install
+## Install (global CLI)
 
 ```bash
+uv tool install git+https://github.com/chiperi/spec-forge.git
+spec-forge --help
+```
+
+- Upgrade: `uv tool upgrade spec-forge` · reinstall: add `--force`.
+- If `spec-forge` isn't found, put `~/.local/bin` on your `PATH` (`uv tool update-shell`).
+
+## Develop (from source)
+
+```bash
+git clone https://github.com/chiperi/spec-forge.git
+cd spec-forge
 uv sync
+uv run spec-forge --help
 ```
 
 ## Usage
