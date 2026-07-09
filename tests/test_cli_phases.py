@@ -71,10 +71,14 @@ def test_command_install_uninstall_cli(tmp_path, monkeypatch):
     r1 = runner.invoke(app, ["command", "install", "--project"])
     assert r1.exit_code == 0, r1.output
     wrapper = tmp_path / ".claude" / "commands" / "spec-forge.md"
+    agents = tmp_path / ".claude" / "agents"
     assert wrapper.exists()
+    assert (agents / "business-analyst.md").exists()
+    assert len(list(agents.glob("*.md"))) == 5
     r2 = runner.invoke(app, ["command", "uninstall", "--project"])
     assert r2.exit_code == 0
     assert not wrapper.exists()
+    assert not (agents / "business-analyst.md").exists()
 
 
 def test_status_reflects_phases(tmp_path):

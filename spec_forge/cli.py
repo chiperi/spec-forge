@@ -32,12 +32,14 @@ def _main(ctx: typer.Context) -> None:
     if os.environ.get("SPEC_FORGE_NO_SLASH"):
         return
     try:
-        path, created = integrations.ensure_installed()
+        result = integrations.ensure_installed()
     except OSError:
         return
-    if created:
+    if result.command_created or result.agents_created:
+        n = len(result.agents_created)
+        extra = f" + {n} субагентів" if n else ""
         typer.secho(
-            f"↪ додано slash-команду Claude Code: /spec-forge ({path})", fg=typer.colors.BLUE
+            f"↪ Claude Code: /spec-forge{extra} ({result.command_path})", fg=typer.colors.BLUE
         )
 
 
@@ -337,24 +339,28 @@ def status(path: Path = typer.Argument(Path("."), help="Тека проєкту"
 @command_app.command("install")
 def command_install(
     project: bool = typer.Option(False, "--project", help="У поточний проєкт замість глобально"),
+    force: bool = typer.Option(False, "--force", help="Перезаписати команду й субагентів"),
 ) -> None:
-    """Додати slash-команду /spec-forge (глобально або у проєкт)."""
+    """Додати slash-команду /spec-forge + рольові субагенти (глобально або у проєкт)."""
     root = Path(".") if project else None
-    path, created = integrations.ensure_installed(root)
-    label = "додано" if created else "вже існує"
-    typer.secho(f"✅ /spec-forge {label}: {path}", fg=typer.colors.GREEN)
+    result = integrations.ensure_installed(root, force=force)
+    typer.secho(f"✅ /spec-forge: {result.command_path}", fg=typer.colors.GREEN)
+    typer.secho(f"   субагентів записано: {len(result.agents_created)}", fg=typer.colors.GREEN)
 
 
 @command_app.command("uninstall")
 def command_uninstall(
     project: bool = typer.Option(False, "--project", help="З поточного проєкту замість глобально"),
 ) -> None:
-    """Прибрати slash-команду /spec-forge."""
+    """Прибрати slash-команду /spec-forge + рольові субагенти."""
     root = Path(".") if project else None
-    path, removed = integrations.remove(root)
-    color = typer.colors.GREEN if removed else typer.colors.YELLOW
-    label = "✅ прибрано" if removed else "= не було"
-    typer.secho(f"{label}: {path}", fg=color)
+    result = integrations.remove(root)
+    if result.command_removed or result.agents_removed:
+        typer.secho(
+            f"✅ прибрано: команда + {len(result.agents_removed)} субагентів", fg=typer.colors.GREEN
+        )
+    else:
+        typer.secho("= нічого не було", fg=typer.colors.YELLOW)
 
 
 if __name__ == "__main__":
