@@ -1,0 +1,1 @@
+../specifications/ai/rules/copilot-instructions.md

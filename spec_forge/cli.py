@@ -1,0 +1,241 @@
+"""CLI (Typer) — флаги + інтерактивні prompt-и (FR-011)."""
+
+from __future__ import annotations
+
+import difflib
+from pathlib import Path
+
+import typer
+
+from .backends import get_backend
+from .deploy import deploy_root
+from .models import InterviewAnswers
+from .profiles import PROFILES, get_profile
+from .scaffolder import BundleExistsError, scaffold
+from .state import PHASES, load_state, mark_phase, phase_done
+from .validators import validate_bundle
+
+app = typer.Typer(
+    help="spec-forge — генератор якісних специфікацій для будь-якого проєкту.",
+    no_args_is_help=True,
+)
+
+
+# ---- helpers ----------------------------------------------------------------
+def _require_bundle(path: Path) -> Path:
+    bundle = path / "specifications"
+    if not bundle.exists():
+        typer.secho("❌ Немає specifications/ — спершу `spec-forge init`", fg=typer.colors.RED)
+        raise typer.Exit(1)
+    return bundle
+
+
+def _read_first_spec(bundle: Path) -> str | None:
+    specs_dir = bundle / "product" / "specs"
+    specs = sorted(specs_dir.rglob("spec.md")) if specs_dir.exists() else []
+    return specs[0].read_text(encoding="utf-8") if specs else None
+
+
+def _build_context(bundle: Path, description: str) -> str:
+    parts: list[str] = []
+    agents = bundle / "ai" / "AGENTS.md"
+    if agents.exists():
+        parts.append("# Project context (AGENTS.md)\n" + agents.read_text(encoding="utf-8"))
+    if description:
+        parts.append("# Feature description\n" + description)
+    if not parts:
+        parts.append("Немає опису — склади базову стартову специфікацію.")
+    parts.append("Напиши повну специфікацію продукту (spec.md) у Markdown.")
+    return "\n\n".join(parts)
+
+
+def _write_artifact(out: Path, new: str, *, updating: bool, yes: bool) -> bool:
+    """Пише артефакт. Якщо updating (re-spec, FR-012) і файл змінюється — diff + підтвердження."""
+    new = new if new.endswith("\n") else new + "\n"
+    if updating and out.exists():
+        old = out.read_text(encoding="utf-8")
+        if old == new:
+            typer.secho(f"= без змін: {out}", fg=typer.colors.YELLOW)
+            return False
+        if not yes:
+            diff = "".join(
+                difflib.unified_diff(
+                    old.splitlines(keepends=True),
+                    new.splitlines(keepends=True),
+                    fromfile=f"{out} (поточний)",
+                    tofile=f"{out} (новий)",
+                )
+            )
+            typer.echo(diff)
+            if not typer.confirm(f"Перезаписати {out}?"):
+                typer.secho("↷ Скасовано — файл не змінено.", fg=typer.colors.YELLOW)
+                return False
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(new, encoding="utf-8")
+    return True
+
+
+def _draft(bundle: Path, persona: str, context: str, backend: str, model: str | None) -> str:
+    try:
+        return get_backend(backend, model).draft(persona, context)
+    except Exception as exc:
+        typer.secho(f"❌ {exc}", fg=typer.colors.RED)
+        raise typer.Exit(1) from exc
+
+
+def _run_phase(
+    path: Path,
+    phase: str,
+    persona: str,
+    context: str,
+    out_rel: str,
+    backend: str,
+    model: str | None,
+    yes: bool,
+) -> None:
+    bundle = path / "specifications"
+    updating = phase_done(path, phase)
+    draft = _draft(bundle, persona, context, backend, model)
+    out = bundle / out_rel
+    written = _write_artifact(out, draft, updating=updating, yes=yes)
+    if out.exists():
+        mark_phase(path, phase)
+    if written:
+        label = "оновлено" if updating else "створено"
+        typer.secho(f"✅ {out_rel} {label}: {out}", fg=typer.colors.GREEN)
+
+
+# ---- commands ---------------------------------------------------------------
+@app.command()
+def init(
+    path: Path = typer.Argument(..., help="Тека проєкту"),
+    name: str = typer.Option(None, "--name", help="Назва проєкту"),
+    stack: str = typer.Option(None, "--stack", help=f"Стек: {', '.join(sorted(PROFILES))}"),
+    summary: str = typer.Option("", "--summary", help="Короткий опис проєкту"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Без інтерактивних питань"),
+) -> None:
+    """Скафолдить bundle specifications/ у теку проєкту (US-1, FR-001/002/007)."""
+    name = name or (path.name if yes else typer.prompt("Назва проєкту", default=path.name))
+    stack = stack or ("python" if yes else typer.prompt("Стек", default="python"))
+    try:
+        profile = get_profile(stack)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+    answers = InterviewAnswers(project_name=name, stack=stack, summary=summary)
+    ctx = {"project": answers.project_name, "summary": answers.summary, **profile.render_context()}
+
+    try:
+        written = scaffold(path, ctx)
+    except BundleExistsError as exc:
+        typer.secho(f"❌ {exc} (для оновлення артефактів — фази spec/plan/tasks)", fg=typer.colors.RED)
+        raise typer.Exit(1) from exc
+
+    mark_phase(path, "init")
+    typer.secho(
+        f"✅ specifications/ створено у {path} ({len(written)} файлів, стек: {stack})",
+        fg=typer.colors.GREEN,
+    )
+
+
+@app.command()
+def spec(
+    path: Path = typer.Argument(Path("."), help="Тека проєкту"),
+    description: str = typer.Option("", "--description", "-d", help="Опис проєкту/фічі"),
+    backend: str = typer.Option("mock", "--backend", help="AI-бекенд: mock | claude"),
+    model: str = typer.Option(None, "--model", help="Модель для claude-бекенду"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Перезаписати без підтвердження"),
+) -> None:
+    """(BA) Чернетка вимог spec.md через персону (US-2, FR-003)."""
+    bundle = _require_bundle(path)
+    context = _build_context(bundle, description)
+    _run_phase(
+        path, "spec", "business-analyst", context,
+        "product/specs/001-feature/spec.md", backend, model, yes,
+    )
+
+
+@app.command()
+def plan(
+    path: Path = typer.Argument(Path("."), help="Тека проєкту"),
+    backend: str = typer.Option("mock", "--backend", help="AI-бекенд: mock | claude"),
+    model: str = typer.Option(None, "--model", help="Модель для claude-бекенду"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Перезаписати без підтвердження"),
+) -> None:
+    """(SA) Технічний план plan.md за spec.md (US-3, FR-004)."""
+    bundle = _require_bundle(path)
+    spec_text = _read_first_spec(bundle)
+    if spec_text is None:
+        typer.secho("❌ Немає spec.md — спершу `spec-forge spec`", fg=typer.colors.RED)
+        raise typer.Exit(1)
+    context = (
+        "# Requirements (spec.md)\n" + spec_text + "\n\nНапиши технічний план (plan.md) у Markdown."
+    )
+    _run_phase(path, "plan", "solution-architect", context, "architecture/plan.md", backend, model, yes)
+
+
+@app.command()
+def tasks(
+    path: Path = typer.Argument(Path("."), help="Тека проєкту"),
+    backend: str = typer.Option("mock", "--backend", help="AI-бекенд: mock | claude"),
+    model: str = typer.Option(None, "--model", help="Модель для claude-бекенду"),
+    yes: bool = typer.Option(False, "--yes", "-y", help="Перезаписати без підтвердження"),
+) -> None:
+    """Виведення задач delivery/tasks.md за plan.md (US-4, FR-005)."""
+    bundle = _require_bundle(path)
+    plan_file = bundle / "architecture" / "plan.md"
+    if not plan_file.exists():
+        typer.secho("❌ Немає plan.md — спершу `spec-forge plan`", fg=typer.colors.RED)
+        raise typer.Exit(1)
+    context = (
+        "# Technical plan (plan.md)\n"
+        + plan_file.read_text(encoding="utf-8")
+        + "\n\nВиведи атомарні, трасовані задачі (tasks.md) у Markdown з галочками."
+    )
+    _run_phase(path, "tasks", "developer", context, "delivery/tasks.md", backend, model, yes)
+
+
+@app.command()
+def validate(path: Path = typer.Argument(Path("."), help="Тека проєкту")) -> None:
+    """Прогнати quality gates по bundle (US-5, FR-006)."""
+    bundle = _require_bundle(path)
+    results = validate_bundle(bundle)
+    for r in results:
+        icon = "✅" if r.passed else "❌"
+        color = typer.colors.GREEN if r.passed else typer.colors.RED
+        typer.secho(f"{icon} {r.gate}", fg=color)
+        for gap in r.gaps:
+            typer.secho(f"   - {gap}", fg=typer.colors.YELLOW)
+    if any(not r.passed for r in results):
+        raise typer.Exit(1)
+    mark_phase(path, "validate")
+    typer.secho("Усі gates зелені.", fg=typer.colors.GREEN)
+
+
+@app.command()
+def deploy(path: Path = typer.Argument(Path("."), help="Тека проєкту")) -> None:
+    """Root-symlinks для tool-discovery (US-6, FR-008)."""
+    _require_bundle(path)
+    created = deploy_root(path)
+    mark_phase(path, "deploy")
+    typer.secho(
+        f"✅ Розгорнуто {len(created)} pointer-ів: {', '.join(created)}", fg=typer.colors.GREEN
+    )
+
+
+@app.command()
+def status(path: Path = typer.Argument(Path("."), help="Тека проєкту")) -> None:
+    """Показати прогрес життєвого циклу (FR-009)."""
+    done = set(load_state(path).get("phases", []))
+    for ph in PHASES:
+        icon = "✅" if ph in done else "⬜"
+        typer.secho(f"{icon} {ph}")
+    nxt = next((p for p in PHASES if p not in done), None)
+    if nxt:
+        typer.secho(f"→ наступна фаза: {nxt}", fg=typer.colors.BLUE)
+    else:
+        typer.secho("Усі фази пройдено.", fg=typer.colors.GREEN)
+
+
+if __name__ == "__main__":
+    app()
