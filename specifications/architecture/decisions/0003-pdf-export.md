@@ -1,4 +1,4 @@
-# ADR-0003: PDF-експорт через fpdf2 + вбудований DejaVuSans
+# ADR-0003: PDF-експорт через fpdf2 + DejaVuSans (+ Noto Emoji fallback)
 
 **Status:** accepted
 **Date:** 2026-07-09
@@ -12,6 +12,9 @@
 ## Decision
 - Генерація через **fpdf2** (pure-python, без системних залежностей, крос-платформно).
 - Кирилиця — **вбудований `DejaVuSans.ttf`** у `spec_forge/assets/fonts/` (вільна ліцензія).
+- Іконки-емодзі (✅ ❌ ⬜ 🟡 ⭐ 🤖 …), яких немає в DejaVuSans, — через **fallback-шрифт
+  `NotoEmoji.ttf`** (Noto Emoji monochrome, OFL) і `pdf.set_fallback_fonts([...])`: fpdf2 підставляє
+  відсутні гліфи по-символьно, лишаючи текст у DejaVu. Кольорові емодзі fpdf2 не вбудовує → монохром.
 - `multi_cell(..., wrapmode="CHAR", new_x="LMARGIN", new_y="NEXT")` — щоб довгі рядки коду не
   «вилазили» за поле й курсор коректно переходив на новий рядок.
 - Вихід: `<project>/exports/spec-forge-export-YYYY-MM-DD_HH-MM-SS.pdf`.
@@ -22,8 +25,8 @@
 - Один самодостатній документ для рев'ю; окрема тека `exports/` (у `.gitignore`).
 
 **Негативні / компроміси**
-- Вбудований шрифт додає ~756 КБ у репо.
-- DejaVuSans не має емодзі (✅/⬜/❌) — fpdf2 їх пропускає з warning (косметично).
+- Вбудовані шрифти додають ~756 КБ (DejaVuSans) + ~866 КБ (NotoEmoji, статичний інстанс) у репо.
+- Емодзі рендеряться **монохромно** (fpdf2 не вбудовує кольорові COLR/bitmap-шрифти) — прийнятно для спек-PDF.
 
 ## Alternatives considered
 - **reportlab** — потужніший, але важчий і теж потребує реєстрації Unicode-шрифту.

@@ -2,7 +2,9 @@
 
 Навіщо: команда відкриває один документ, вичитує всю специфікацію й позначає, у яких
 файлах треба зміни. Імʼя містить таймстемп; PDF складається в окрему теку `exports/`.
-Кирилиця — через вбудований DejaVuSans (базові PDF-шрифти її не підтримують).
+Кирилиця — через вбудований DejaVuSans (базові PDF-шрифти її не підтримують). Іконки-емодзі
+(✅ ❌ ⬜ 🟡 ⭐ 🤖 …), яких немає в DejaVuSans, домальовуються з вбудованого Noto Emoji
+(monochrome) через per-glyph fallback fpdf2 — текст лишається DejaVu, іконки беруться з Noto.
 """
 
 from __future__ import annotations
@@ -12,7 +14,9 @@ from pathlib import Path
 
 from fpdf import FPDF
 
-FONT_PATH = Path(__file__).parent / "assets" / "fonts" / "DejaVuSans.ttf"
+_FONTS = Path(__file__).parent / "assets" / "fonts"
+FONT_PATH = _FONTS / "DejaVuSans.ttf"
+EMOJI_FONT_PATH = _FONTS / "NotoEmoji.ttf"
 
 _SKIP_SUFFIXES = {
     ".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf",
@@ -56,6 +60,10 @@ def export_bundle(project: Path, out_dirname: str = "exports") -> Path:
     pdf = FPDF(format="A4", unit="mm")
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_font("DejaVu", "", str(FONT_PATH))
+    # Fallback для іконок-емодзі, яких немає в DejaVuSans (fpdf2 підставляє гліфи по-символьно).
+    if EMOJI_FONT_PATH.exists():
+        pdf.add_font("NotoEmoji", "", str(EMOJI_FONT_PATH))
+        pdf.set_fallback_fonts(["NotoEmoji"])
 
     def cell(height: float, text: str) -> None:
         # new_x/new_y повертають курсор на лівий берег наступного рядка (fpdf2)

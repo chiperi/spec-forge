@@ -41,7 +41,8 @@
 - [x] **T-024** тести install/remove/dispatcher-markers/self-upgrade/enumeration
 - [x] **T-025** docs: ADR-0006 + README-секція
 - [x] **T-026** субагенти `reverse-analyst` + `reviewer` (бандл `ai/agents/`) для нативного `/spec-forge analyze`
+- [x] **T-027** PDF-експорт: іконки-емодзі через fallback-шрифт `NotoEmoji.ttf` (monochrome, OFL) + `set_fallback_fonts` (ADR-0003)
 
 ---
-**ВСІ задачі (T-001…T-026 + фази) виконано.** Команди: `init · spec · plan · tasks · analyze · validate · deploy · status · export · command`.
+**ВСІ задачі (T-001…T-027 + фази) виконано.** Команди: `init · spec · plan · tasks · analyze · validate · deploy · status · export · command`.
 `/spec-forge <підкоманда>` — диспетчер точних підкоманд (контент нативно на підписці, механічні через CLI). 47 тестів, ruff clean, coverage 91%.
