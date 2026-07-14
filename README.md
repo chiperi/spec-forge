@@ -1,188 +1,216 @@
 # spec-forge
 
-**Stack-agnostic, spec-driven генератор документації.** Перетворює будь-який проєкт на повний,
-**AI- та OS-friendly** бандл специфікацій (`specifications/`). Гібрид: **детермінований двигун**
-(скафолдинг · lifecycle · валідація) + **AI-персони** (BA / SA / Designer / Developer), що наповнюють
-змістом. Між кожною змістовою фазою — **людський gate**: ти вичитуєш артефакт і лише тоді йдеш далі.
+**Stack-agnostic, spec-driven documentation generator.** Turns any project into a complete,
+**AI- & OS-friendly** specification bundle (`specifications/`). A hybrid: a **deterministic engine**
+(scaffolding · lifecycle · validation) + **AI personas** (BA / SA / Designer / Developer) that fill in
+the content. After every content phase there is a **human gate** — you review the artifact, then move on.
 
-> Цей README — практичний гайд: **ролі → функціонал → правила → повний цикл крок-за-кроком** на
-> прикладі одного проєкту. Внутрішня будова тула описана у [`specifications/`](specifications/).
+> This README is a practical guide: **roles → functionality → rules → a full step-by-step cycle** on one
+> example project. The tool's own internals live in [`specifications/`](specifications/).
 
----
+## Contents
 
-## 1. Ролі (персони)
-
-Кожна фаза документа належить одній персоні. Персона — це і гайд для людини, і AI-субагент
-(`specifications/ai/agents/*.md`). Головне в кожній — **межі**: чого роль **не** робить, щоб не «розповзатися».
-
-| Персона | Коли активна | Володіє артефактом | Не робить |
-|---|---|---|---|
-| 👤 **Business Analyst** | старт фічі — ЩО/НАВІЩО | `product/specs/*/spec.md`, glossary | не обирає стек, не пише код |
-| 🏛️ **Solution Architect** | після spec.md — ЯК | `architecture/plan.md`, ADR `decisions/`, `contracts/`, NFR, threat-model | не пише прод-код, не проєктує UI |
-| 🎨 **Designer** | фічі з інтерфейсом | `design/` — flows, стани, дизайн-система, a11y | не визначає бекенд/БД, не пише код |
-| 🛠️ **Developer** | після plan/tasks | `delivery/tasks.md`, далі `src/`+`tests/` | no scope creep, no silent refactors |
-| 🔎 **code-reviewer** | після коду | рев'ю на баги/спрощення | — |
-| ↩️ **reverse-analyst** | brownfield-аналіз | reverse-`spec.md` за наявним кодом | не вигадує відсутніх фіч |
-| 📋 **reviewer** | brownfield-аналіз | `review.md` — gap/рев'ю-документ | не переписує код |
-
-**Передавання по ланцюгу:**
-
-```
-BA (spec.md)  →  SA (plan.md + ADR + contracts)  →  Designer (design/)  ⤵
-                                                     Developer (tasks.md → код)
-```
+1. [Roles (personas)](#1-roles-personas)
+2. [Functionality (commands = phases)](#2-functionality-commands--phases)
+3. [Install](#3-install-one-time)
+4. [General usage rules](#4-general-usage-rules)
+5. [Full cycle, step by step](#5-full-cycle-step-by-step-example-notes-api)
+6. [Two content backends](#6-two-content-backends)
+7. [Brownfield: docs from existing code](#7-brownfield-docs-from-existing-code)
 
 ---
 
-## 2. Функціонал (команди = фази)
+## 1. Roles (personas)
 
-`spec-forge` — CLI із фазами життєвого циклу. Змістові фази виконує персона, механічні — детермінований двигун.
+Each document phase is owned by one persona. A persona is both a guide for a human and an AI subagent
+(`specifications/ai/agents/*.md`). The key part of each is its **boundaries** — what the role does **not**
+do, so it never sprawls.
 
-| Команда | Фаза | Хто виконує | Вхід → Вихід |
+| Persona | Active when | Owns / produces | Does not do |
 |---|---|---|---|
-| `init` | скафолд | двигун (без AI) | тека → каркас `specifications/` під стек |
-| `spec` | вимоги | 👤 BA | опис → `product/specs/001-feature/spec.md` |
-| `plan` | архітектура | 🏛️ SA | `spec.md` → `architecture/plan.md` + ADR + контракти |
-| `tasks` | план робіт | 🛠️ Developer | `plan.md` → `delivery/tasks.md` (атомарні задачі) |
-| `validate` | quality gates | двигун (без AI) | бандл → pass/fail по гейтах |
-| `deploy` | tool-discovery | двигун (без AI) | бандл → root-symlinks (`AGENTS.md`, `.claude/…`) |
-| `export` | PDF-знімок | двигун (без AI) | бандл → `exports/spec-forge-export-<ts>.pdf` |
-| `analyze` | brownfield | ↩️ reverse-analyst + 📋 reviewer | наявний код → `spec.md` + `review.md` |
-| `status` | прогрес | двигун | стан → пройдені/наступна фаза |
+| 👤 **Business Analyst** | feature start — WHAT / WHY | `product/specs/*/spec.md`, glossary | pick the stack, write code |
+| 🏛️ **Solution Architect** | after spec.md — HOW | `architecture/plan.md`, ADRs `decisions/`, `contracts/`, NFRs, threat model | write prod code, design UI |
+| 🎨 **Designer** | features with a UI | `design/` — flows, states, design system, a11y | define backend/DB, write code |
+| 🛠️ **Developer** | after plan/tasks | `delivery/tasks.md`, then `src/` + `tests/` | scope creep, silent refactors |
+| 🔎 **code-reviewer** | after code | review for bugs / simplifications | — |
+| ↩️ **reverse-analyst** | brownfield analysis | reverse `spec.md` from existing code | invent missing features |
+| 📋 **reviewer** | brownfield analysis | `review.md` — gap / review doc | rewrite the code |
 
-Артефакти складаються в єдину теку `specifications/` (шари: `product/` · `architecture/` · `contracts/`
+**Handoff along the chain:**
+
+```mermaid
+flowchart LR
+    BA["👤 Business Analyst<br/>spec.md"] --> SA["🏛️ Solution Architect<br/>plan.md · ADR · contracts"]
+    SA --> DES["🎨 Designer<br/>design/ (if UI)"]
+    SA --> DEV["🛠️ Developer<br/>tasks.md → src/ + tests/"]
+    DES --> DEV
+```
+
+---
+
+## 2. Functionality (commands = phases)
+
+`spec-forge` is a CLI built around lifecycle phases. Content phases are run by a persona; mechanical phases
+by the deterministic engine.
+
+| Command | Phase | Runs | Input → Output |
+|---|---|---|---|
+| `init` | scaffold | engine (no AI) | folder → `specifications/` skeleton for the stack |
+| `spec` | requirements | 👤 BA | description → `product/specs/001-feature/spec.md` |
+| `plan` | architecture | 🏛️ SA | `spec.md` → `architecture/plan.md` + ADRs + contracts |
+| `tasks` | work plan | 🛠️ Developer | `plan.md` → `delivery/tasks.md` (atomic tasks) |
+| `validate` | quality gates | engine (no AI) | bundle → pass/fail per gate |
+| `deploy` | tool-discovery | engine (no AI) | bundle → root symlinks (`AGENTS.md`, `.claude/…`) |
+| `export` | PDF snapshot | engine (no AI) | bundle → `exports/spec-forge-export-<ts>.pdf` |
+| `analyze` | brownfield | ↩️ reverse-analyst + 📋 reviewer | existing code → `spec.md` + `review.md` |
+| `status` | progress | engine | state → done / next phase |
+
+All artifacts land in a single `specifications/` tree (layers: `product/` · `architecture/` · `contracts/`
 · `design/` · `delivery/` · `quality/` · `platform/` · `ai/` · `roles/` · `knowledge/`).
 
 ---
 
-## 3. Встановлення (одноразово)
+## 3. Install (one-time)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/chiperi/spec-forge/main/install.sh | bash
 ```
 
-Ставить глобальний CLI **і** реєструє в Claude Code slash-команду `/spec-forge` + 7 рольових субагентів.
-Прибрати все разом: `./uninstall.sh` (або `spec-forge command uninstall`). Перезавантаж Claude Code, щоб побачити `/spec-forge`.
+Installs the global CLI **and** registers the `/spec-forge` Claude Code command + 7 role subagents.
+Remove both together: `./uninstall.sh` (or `spec-forge command uninstall`). Reload Claude Code to see `/spec-forge`.
 
 ---
 
-## 4. Загальні правила використання
+## 4. General usage rules
 
-- **Порядок фаз фіксований:** `init → spec → plan → tasks → validate → deploy`. Кожна фаза читає артефакт попередньої.
-- **Людський gate після кожної змістової фази** — вичитай і апрувни артефакт, перш ніж запускати наступну.
-- **`[NEEDS CLARIFICATION]` блокує перехід.** Відкриті питання у `spec.md` не пускають далі, поки їх не закрито.
-- **Ідемпотентність + re-spec.** Повторний запуск фази не дублює артефакти: показує **diff** і питає підтвердження перед перезаписом (ручні правки зберігаються). `--yes` / `-y` — пропустити підтвердження (для CI).
-- **Два режими наповнення** (див. §6): нативний Claude Code (без API-ключа) або CLI `--backend claude`.
-- **Stack-agnostic.** Стек задається профілем на `init` (`--stack python|node|go`) — ядро не змінюється.
-- **Guardrails:** не комітай секрети/`.env`; не змінюй структуру бандла вручну; жодних «заодно» рефакторингів.
+- **Fixed phase order:** `init → spec → plan → tasks → validate → deploy`. Each phase reads the previous one's artifact.
+- **Human gate after every content phase** — review and approve the artifact before running the next one.
+- **`[NEEDS CLARIFICATION]` blocks progress.** Open questions in `spec.md` hold the pipeline until closed.
+- **Idempotent + re-spec.** Re-running a phase never duplicates artifacts: it shows a **diff** and asks before overwriting (manual edits are preserved). `--yes` / `-y` skips the confirmation (for CI).
+- **Two content backends** (see §6): native Claude Code (no API key) or CLI `--backend claude`.
+- **Stack-agnostic.** The stack is chosen at `init` (`--stack python|node|go`) — the core never changes.
+- **Guardrails:** never commit secrets/`.env`; don't edit the bundle structure by hand; no "while I'm here" refactors.
 
 ---
 
-## 5. Повний цикл крок-за-кроком (приклад: `notes-api`)
+## 5. Full cycle, step by step (example: `notes-api`)
 
-Створимо документацію з нуля для одного проєкту — REST API для нотаток. Нижче обидва способи запуску:
-🟢 **у Claude Code** (`/spec-forge …`, на підписці, без API-ключа) і ⚙️ **CLI** (`--backend claude`, потрібен `ANTHROPIC_API_KEY`).
+We build documentation from scratch for one project — a notes REST API. Each step shows both entry points:
+🟢 **in Claude Code** (`/spec-forge …`, on your subscription, no API key) and ⚙️ **CLI** (`--backend claude`, needs `ANTHROPIC_API_KEY`).
 
-### Крок 0 — тека проєкту
+The full pipeline:
+
+```mermaid
+flowchart TD
+    A["init · engine<br/>scaffold specifications/"] --> B["spec · 👤 BA<br/>spec.md"]
+    B -->|"🚦 human gate"| C["plan · 🏛️ SA<br/>plan.md · ADR · contracts"]
+    C -->|"🚦 human gate"| D["design · 🎨 Designer<br/>design/ (optional)"]
+    D -->|"🚦 human gate"| E["tasks · 🛠️ Developer<br/>tasks.md"]
+    E -->|"🚦 human gate"| F["validate · engine<br/>quality gates"]
+    F --> G["deploy · engine<br/>root symlinks"]
+    G --> H["export · engine<br/>PDF (optional)"]
+```
+
+### Step 0 — project folder
 ```bash
 mkdir notes-api && cd notes-api
 ```
 
-### Крок 1 — `init`: каркас `specifications/`
-Детермінований скафолд під стек (AI не задіяний). Це механічна фаза — у Claude Code вона делегується тому ж локальному CLI.
+### Step 1 — `init`: the `specifications/` skeleton
+Deterministic scaffold for the stack (no AI). This is a mechanical phase — in Claude Code it is delegated to the same local CLI.
 ```bash
-⚙️  spec-forge init . --name "notes-api" --stack python   # флаги
-    spec-forge init .                                      # або інтерактивне інтервʼю (назва, стек)
-🟢  /spec-forge init                                       # той самий CLI з Claude Code
+⚙️  spec-forge init . --name "notes-api" --stack python   # flags
+    spec-forge init .                                      # or interactive interview (name, stack)
+🟢  /spec-forge init                                       # same CLI, from Claude Code
 ```
-**Результат:** повна тека `specifications/` з усіма шарами + `.spec-forge/state.json`. → `status`: `✅ init`.
+**Result:** a full `specifications/` tree with all layers + `.spec-forge/state.json`. → `status`: `✅ init`.
 
-### Крок 2 — `spec` (👤 BA): вимоги
+### Step 2 — `spec` (👤 BA): requirements
 ```bash
-⚙️  spec-forge spec . -d "REST API для нотаток із тегами й повнотекстовим пошуком" --backend claude
-🟢  /spec-forge spec REST API для нотаток із тегами й пошуком
+⚙️  spec-forge spec . -d "REST API for notes with tags and full-text search" --backend claude
+🟢  /spec-forge spec REST API for notes with tags and full-text search
 ```
-**Результат:** `product/specs/001-feature/spec.md` — problem, user stories, acceptance (EARS / Given-When-Then), **вимірювані** success criteria (SC-…), glossary.
-**🚦 Gate:** вичитай spec.md; закрий усі `[NEEDS CLARIFICATION]`.
+**Result:** `product/specs/001-feature/spec.md` — problem, user stories, acceptance (EARS / Given-When-Then), **measurable** success criteria (SC-…), glossary.
+**🚦 Gate:** read spec.md; close every `[NEEDS CLARIFICATION]`.
 
-### Крок 3 — `plan` (🏛️ SA): архітектура
+### Step 3 — `plan` (🏛️ SA): architecture
 ```bash
 ⚙️  spec-forge plan . --backend claude
 🟢  /spec-forge plan
 ```
-**Вхід:** `spec.md`. **Результат:** `architecture/plan.md` + ADR (`decisions/`) + контракти (`openapi.yaml`) + NFR у числах + threat-model.
-**🚦 Gate:** апрувни план і ключові рішення (ADR).
+**Input:** `spec.md`. **Result:** `architecture/plan.md` + ADRs (`decisions/`) + contracts (`openapi.yaml`) + NFRs in numbers + threat model.
+**🚦 Gate:** approve the plan and key decisions (ADRs).
 
-### Крок 4 — `design` (🎨 Designer) — *опційно, якщо є UI*
-Для чистого API можна пропустити. Для інтерфейсу — user flows, стани компонентів, a11y (WCAG AA) у `design/`.
+### Step 4 — `design` (🎨 Designer) — *optional, if there is a UI*
+For a pure API you can skip it. For a UI — user flows, component states, a11y (WCAG AA) in `design/`.
 
-### Крок 5 — `tasks` (🛠️ Developer): план робіт
+### Step 5 — `tasks` (🛠️ Developer): work plan
 ```bash
 ⚙️  spec-forge tasks . --backend claude
 🟢  /spec-forge tasks
 ```
-**Вхід:** `plan.md`. **Результат:** `delivery/tasks.md` — **атомарні, трасовані** задачі з чекбоксами: ID `T-001`, маркер `[P]` (паралельні), посилання на `US-/FR-/NFR-`.
-**🚦 Gate:** переконайся, що задачі покривають усі вимоги.
+**Input:** `plan.md`. **Result:** `delivery/tasks.md` — **atomic, traceable** tasks with checkboxes: id `T-001`, `[P]` marker (parallelizable), links to `US-/FR-/NFR-`.
+**🚦 Gate:** make sure the tasks cover every requirement.
 
-### Крок 6 — `validate`: quality gates
+### Step 6 — `validate`: quality gates
 ```bash
-spec-forge validate .            # однаково для обох режимів (без AI)
+spec-forge validate .            # same in both backends (no AI)
 ```
-Проганяє 3 детермінованих гейти (падає з `exit 1`, якщо хоч один червоний):
+Runs 3 deterministic gates (exits `1` if any is red):
 
-| Gate | Перевіряє |
+| Gate | Checks |
 |---|---|
-| `structure` | є `ai/AGENTS.md`, `architecture/plan.md`, ≥1 `spec.md` |
-| `clarifications` | **0** відкритих `[NEEDS CLARIFICATION]` |
-| `measurable-success` | у spec.md є `Success Criteria` з маркерами `SC-` |
+| `structure` | `ai/AGENTS.md`, `architecture/plan.md`, ≥1 `spec.md` exist |
+| `clarifications` | **0** open `[NEEDS CLARIFICATION]` |
+| `measurable-success` | spec.md has `Success Criteria` with `SC-` markers |
 
-### Крок 7 — `deploy`: розгортання для інструментів
+### Step 7 — `deploy`: expose for tools
 ```bash
 spec-forge deploy .
 ```
-Кладе в корінь **symlinks** на джерело правди в `specifications/` (`AGENTS.md`, `CLAUDE.md`, `.mcp.json`,
-`.claude/*`, dotfiles), щоб Claude/Cursor/Copilot знаходили конфіги за стандартними шляхами.
+Places **symlinks** in the project root pointing at the source of truth in `specifications/` (`AGENTS.md`,
+`CLAUDE.md`, `.mcp.json`, `.claude/*`, dotfiles), so Claude/Cursor/Copilot find configs at standard paths.
 
-### Крок 8 — `export` (опційно): PDF для командного рев'ю
+### Step 8 — `export` (optional): PDF for team review
 ```bash
 spec-forge export .              # → exports/spec-forge-export-<timestamp>.pdf
 ```
 
-### Перевірка прогресу будь-коли
+### Check progress anytime
 ```bash
 spec-forge status .
-# ✅ init  ✅ spec  ✅ plan  ✅ tasks  ✅ validate  ✅ deploy  → усі фази пройдено
+# ✅ init  ✅ spec  ✅ plan  ✅ tasks  ✅ validate  ✅ deploy  → all phases done
 ```
 
-**Підсумок циклу:** `init → spec(BA) → plan(SA) → [design] → tasks(Dev) → validate → deploy` — спершу спека, потім архітектура, потім план робіт; людський gate між фазами.
+**Cycle recap:** `init → spec(BA) → plan(SA) → [design] → tasks(Dev) → validate → deploy` — spec first, then architecture, then the work plan; a human gate between phases.
 
 ---
 
-## 6. Два режими наповнення
+## 6. Two content backends
 
-| | 🟢 Claude Code (нативно) | ⚙️ CLI |
+| | 🟢 Claude Code (native) | ⚙️ CLI |
 |---|---|---|
-| Виклик | `/spec-forge <підкоманда>` | `spec-forge <підкоманда> --backend claude` |
-| Ключ | **не потрібен** (на підписці) | потрібен `ANTHROPIC_API_KEY` |
-| Модель | субагенти в Claude Code | Anthropic Messages API, `claude-opus-4-8` |
-| Механічні (`init`/`validate`/`export`/`deploy`/`status`) | делегуються локальному CLI | локальний CLI |
+| Invocation | `/spec-forge <subcommand>` | `spec-forge <subcommand> --backend claude` |
+| Key | **not needed** (subscription) | needs `ANTHROPIC_API_KEY` |
+| Model | subagents inside Claude Code | Anthropic Messages API, `claude-opus-4-8` |
+| Mechanical (`init`/`validate`/`export`/`deploy`/`status`) | delegated to the local CLI | local CLI |
 
-Дефолтний `--backend mock` — офлайн, детермінований (echo-скафолд без AI), зручний для тестів/CI.
+The default `--backend mock` is offline and deterministic (echo scaffold, no AI) — handy for tests/CI.
 
 ---
 
-## 7. Brownfield: документація з наявного коду
+## 7. Brownfield: docs from existing code
 
-Якщо код уже є — відтвори спеку й отримай рев'ю, **не чіпаючи код**:
+If the code already exists — reconstruct the spec and get a review, **without touching the code**:
 ```bash
 spec-forge analyze /path/to/project --backend claude
-# → product/specs/002-existing/spec.md    (що робить сьогодні)
-# → product/specs/002-existing/review.md   (що/де виправити, severity)
+# → product/specs/002-existing/spec.md    (what it does today)
+# → product/specs/002-existing/review.md   (what/where to fix, severity)
 ```
 
 ---
 
-## Розробка тула (from source)
+## Develop the tool (from source)
 
 ```bash
 git clone https://github.com/chiperi/spec-forge.git && cd spec-forge
@@ -191,4 +219,4 @@ uv run spec-forge --help
 uv run ruff check . && uv run pytest --cov=spec_forge
 ```
 
-Вимоги самого тула написані його ж spec-driven процесом (dogfooding) — див. [`specifications/`](specifications/).
+The tool's own requirements were written with its own spec-driven process (dogfooding) — see [`specifications/`](specifications/).
