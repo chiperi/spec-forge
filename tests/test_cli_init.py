@@ -29,9 +29,9 @@ def test_spec_requires_bundle(tmp_path):
     assert result.exit_code == 1
 
 
-def test_spec_mock_writes_draft(tmp_path):
+def test_spec_writes_draft(tmp_path):
     target = tmp_path / "proj"
     runner.invoke(app, ["init", str(target), "--stack", "python", "--yes"])
-    result = runner.invoke(app, ["spec", str(target), "--backend", "mock"])
+    result = runner.invoke(app, ["spec", str(target)])
     assert result.exit_code == 0, result.output
     assert (target / "specifications" / "product" / "specs" / "001-feature" / "spec.md").exists()

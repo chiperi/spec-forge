@@ -8,7 +8,7 @@
 > ЯК будуємо. Рішення-розвилки → `decisions/` (ADR).
 
 ## 1. Огляд рішення
-App-first **гібрид**: детермінований CLI-двигун (Python/Typer) + AI-субагенти (Claude Agent SDK)
+App-first **гібрид**: детермінований CLI-двигун (Python/Typer) + AI-субагенти (нативно в Claude Code)
 для наповнення. Фазовий lifecycle з людськими гейтами. Вихід — bundle `specifications/`.
 Незалежність від стеку — через підключувані **stack-profiles**.
 
@@ -19,7 +19,8 @@ App-first **гібрид**: детермінований CLI-двигун (Pytho
 
 ## 3. Стек
 Python 3.12+ · **Typer** (CLI) · **uv** · **Ruff** · **pytest** · **Jinja2** (рендер шаблонів) ·
-**pydantic** (моделі/валідація) · **Claude Agent SDK** (AI backend) · Rich (вивід/diff, опційно).
+**pydantic** (моделі/валідація) · **нативні субагенти Claude Code** (AI-наповнення) + `MockBackend`
+(детермінований CLI-скафолдинг) · Rich (вивід/diff, опційно).
 
 ## 4. Архітектура (модулі)
 

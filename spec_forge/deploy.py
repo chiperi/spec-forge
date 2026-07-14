@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import os
+import shutil
 from pathlib import Path
 
 # (ім'я лінка в корені, ціль відносно кореня)
@@ -15,9 +16,15 @@ ROOT_LINKS: list[tuple[str, str]] = [
     ("CLAUDE.md", "specifications/ai/AGENTS.md"),
     (".mcp.json", "specifications/ai/mcp/mcp.json"),
     (".editorconfig", "specifications/platform/editorconfig"),
-    (".gitattributes", "specifications/platform/gitattributes"),
     (".tool-versions", "specifications/platform/tool-versions"),
     (".env.example", "specifications/platform/env.example"),
+]
+
+# git читає ці файли з O_NOFOLLOW (захист від symlink-атак) і НЕ йде за симлінком,
+# тож у корені вони МАЮТЬ бути реальними файлами — інакше правила ігноруються
+# ("Too many levels of symbolic links"). Тому копіюємо вміст, а не лінкуємо.
+ROOT_COPIES: list[tuple[str, str]] = [
+    (".gitattributes", "specifications/platform/gitattributes"),
 ]
 
 # (ім'я лінка, ціль відносно теки лінка)
@@ -40,12 +47,30 @@ def _link(link: Path, target: str) -> None:
     link.symlink_to(target)
 
 
+def _copy(dst: Path, src: Path) -> None:
+    """Матеріалізує реальний файл (для git-чутливих цілей). Оновлює за зміни джерела."""
+    if dst.is_symlink():
+        dst.unlink()
+    new = src.read_bytes()
+    if dst.exists() and dst.read_bytes() == new:
+        return
+    shutil.copyfile(src, dst)
+
+
 def deploy_root(root: Path) -> list[str]:
-    """Створює symlinks для наявних цілей. Повертає імена створених лінків."""
+    """Створює root-pointer-и для наявних цілей. Повертає імена створених.
+
+    Здебільшого symlinks; git-чутливі файли (`ROOT_COPIES`) — реальні копії.
+    """
     created: list[str] = []
     for name, target in ROOT_LINKS:
         if (root / target).exists():
             _link(root / name, target)
+            created.append(name)
+    for name, target in ROOT_COPIES:
+        src = root / target
+        if src.exists():
+            _copy(root / name, src)
             created.append(name)
     for name, target in NESTED_LINKS:
         link = root / name

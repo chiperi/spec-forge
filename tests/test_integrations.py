@@ -49,7 +49,7 @@ def test_wrapper_is_subcommand_dispatcher(tmp_path):
     ensure_installed(tmp_path)
     body = _cmd(tmp_path).read_text(encoding="utf-8")
     # диспетчер за підкомандами (точний функціонал CLI), не «ціль своїми словами»
-    for marker in ("v3", "диспетчер", "підкоманда"):
+    for marker in (f"v{WRAPPER_VERSION}", "диспетчер", "підкоманда"):
         assert marker in body
     # контентні підкоманди делегуються рольовим субагентам
     for sub in ("spec", "plan", "tasks", "analyze"):

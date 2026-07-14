@@ -14,7 +14,7 @@
 - Пакет-менеджер: **uv**
 - Тести: **pytest** (+ coverage)
 - Лінт/формат: **Ruff**
-- AI-бекенд: **Anthropic Messages API** (пакет `anthropic`), модель `claude-opus-4-8` (ADR-0002)
+- AI-наповнення: **нативно в Claude Code** через субагентів `/spec-forge` (на підписці Claude); CLI-бекенд — детермінований `mock`
 - Вихід тула (spec bundle) — **stack-agnostic**: цільовий стек задається stack-profile, не хардкодиться.
 
 ## Setup commands

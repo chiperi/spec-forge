@@ -7,7 +7,7 @@ Python-пакети не мають хуків на install/uninstall, тож:
 
 Runtime `/spec-forge` — це **диспетчер підкоманд**: `/spec-forge <підкоманда>` виконує точний
 функціонал CLI. Контент (spec/plan/tasks/analyze) генерується нативно в Claude Code (головний тред +
-субагенти), без API-ключа (на підписці); механічні (init/validate/export/deploy/status) — локальним CLI.
+субагенти) на підписці Claude; механічні (init/validate/export/deploy/status) — локальним CLI.
 """
 
 from __future__ import annotations
@@ -16,16 +16,16 @@ from pathlib import Path
 from typing import NamedTuple
 
 WRAPPER_NAME = "spec-forge.md"
-WRAPPER_VERSION = 3
+WRAPPER_VERSION = 5
 AGENTS_SRC = Path(__file__).parent / "templates" / "bundle" / "ai" / "agents"
 
 _WRAPPER = """\
 ---
-description: Точні підкоманди spec-forge нативно в Claude Code (spec/plan/tasks/analyze…), без API-ключа
+description: Точні підкоманди spec-forge нативно в Claude Code (spec/plan/tasks/analyze…), на підписці
 argument-hint: <підкоманда> [аргументи] — spec | plan | tasks | analyze | init | validate | export | deploy | status
 allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash
 ---
-<!-- spec-forge-command v3 -->
+<!-- spec-forge-command v5 -->
 
 Ти — **диспетчер** `/spec-forge <підкоманда> [аргументи]`. **Перший токен** `$ARGUMENTS` — це
 підкоманда (той самий набір, що й у CLI `spec-forge`). Виконай ТОЧНО відповідний функціонал у теці
@@ -33,9 +33,9 @@ allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash
 
 Два класи підкоманд:
 - **Контент** (`spec`, `plan`, `tasks`, `analyze`) — генеруй **нативно тут**, у Claude Code, через
-  рольових субагентів (`Task`). НЕ викликай CLI і **не** потребуй `ANTHROPIC_API_KEY` (працює на підписці).
+  рольових субагентів (`Task`). НЕ викликай CLI — контент генерується тут, на підписці Claude.
 - **Механічні / детерміновані** (`init`, `validate`, `export`, `deploy`, `status`) — виконай локальний
-  CLI: у терміналі `spec-forge $ARGUMENTS`, покажи вивід. Вони безкоштовні й не чіпають API. Якщо
+  CLI: у терміналі `spec-forge $ARGUMENTS`, покажи вивід. Вони безкоштовні й детерміновані. Якщо
   `spec-forge` не знайдено (`command -v spec-forge`) — скажи, як поставити, і зупинись.
 
 ## Маршрутизація
@@ -53,14 +53,16 @@ glossary. **Гейт.**
 ### `tasks` — Developer → `specifications/delivery/tasks.md`
 Прочитай plan.md. `Task` (subagent_type: `developer`) → атомарні трасовані задачі. **Гейт.**
 
-### `analyze [тека]` — brownfield (in-place, код не чіпаємо)
+### `analyze [тека]` — brownfield: спека з коду + аудит дрейфу доків (in-place, код не чіпаємо)
 Ціль — тека з `$ARGUMENTS` (типово `.`). Делегуй `Task` (subagent_type: `reverse-analyst`) — він сам
 читає код цілі (пропускаючи `node_modules`, `.venv`, `.git`, бінарні/великі файли) →
 `specifications/product/specs/002-existing/spec.md` (фактична спека, з посиланнями на файли). Тоді
-`Task` (subagent_type: `reviewer`) → `.../002-existing/review.md` (gap / де і що виправити). **Гейт.**
+`Task` (subagent_type: `reviewer`) — дай йому і наявні доки `specifications/`, і код: він **звіряє доки з
+кодом**, знаходить чого бракує/недоліки й **дрейф** (код змінився, доки — ні) → `.../002-existing/review.md`
+з **конкретними варіантами перезапису доків** (не застосовуй їх без підтвердження). **Гейт.**
 
 ### `init` / `validate` / `export` / `deploy` / `status`
-Виконай `spec-forge $ARGUMENTS` у терміналі й покажи вивід (детерміновано, без API).
+Виконай `spec-forge $ARGUMENTS` у терміналі й покажи вивід (детерміновано, локально).
 
 ### порожньо або `help`
 Покажи список підкоманд вище (по рядку-опису на кожну) і зупинись.

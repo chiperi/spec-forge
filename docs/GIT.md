@@ -63,8 +63,10 @@ git commit -m "feat: додати команду export (PDF-знімок, T-019
 git switch -c spec/review-round-1
 
 # 1) згенерувати/оновити артефакти (за потреби)
-uv run spec-forge spec  . --backend claude
-uv run spec-forge plan  . --backend claude
+#    реальний зміст — нативно в Claude Code: /spec-forge spec · /spec-forge plan
+#    CLI нижче дає детермінований скафолдинг (офлайн)
+uv run spec-forge spec  .
+uv run spec-forge plan  .
 uv run spec-forge validate .
 
 # 2) зібрати ЄДИНИЙ PDF усіх файлів специфікації для командного рев'ю

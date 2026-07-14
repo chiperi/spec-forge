@@ -21,3 +21,6 @@ exports/
 
 # macOS
 .DS_Store
+
+# IDE
+.idea/

@@ -6,10 +6,22 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
 CLARIFICATION_MARKER = "[NEEDS CLARIFICATION"
+
+# Справжній відкритий маркер стоїть у прозі. Згадки маркера як *терміна* пишуть
+# інлайн-кодом (`[NEEDS CLARIFICATION]`) або у code-fence — їх не рахуємо, інакше
+# спека, що описує сам маркер, хибно «валить» власний гейт.
+_CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
+_INLINE_CODE_RE = re.compile(r"`[^`]*`")
+
+
+def _strip_code(text: str) -> str:
+    """Прибирає code-fence і інлайн-код → лишаються тільки «прозові» маркери."""
+    return _INLINE_CODE_RE.sub(" ", _CODE_FENCE_RE.sub(" ", text))
 
 # Файли, які має гарантувати `init` + фази (мінімальний bundle тула).
 REQUIRED_FILES = ["ai/AGENTS.md", "architecture/plan.md"]
@@ -37,7 +49,7 @@ def check_structure(bundle: Path) -> ValidationResult:
 def check_clarifications(bundle: Path) -> ValidationResult:
     gaps: list[str] = []
     for f in _spec_files(bundle):
-        n = f.read_text(encoding="utf-8").count(CLARIFICATION_MARKER)
+        n = _strip_code(f.read_text(encoding="utf-8")).count(CLARIFICATION_MARKER)
         if n:
             gaps.append(f"{f.relative_to(bundle)}: {n} незакритих [NEEDS CLARIFICATION]")
     return ValidationResult("clarifications", not gaps, gaps)

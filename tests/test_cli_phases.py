@@ -11,14 +11,14 @@ def _init(tmp_path):
 
 def test_plan_writes_plan(tmp_path):
     _init(tmp_path)
-    result = runner.invoke(app, ["plan", str(tmp_path / "proj"), "--backend", "mock"])
+    result = runner.invoke(app, ["plan", str(tmp_path / "proj")])
     assert result.exit_code == 0, result.output
     assert (tmp_path / "proj" / "specifications" / "architecture" / "plan.md").exists()
 
 
 def test_tasks_writes_tasks(tmp_path):
     _init(tmp_path)
-    result = runner.invoke(app, ["tasks", str(tmp_path / "proj"), "--backend", "mock"])
+    result = runner.invoke(app, ["tasks", str(tmp_path / "proj")])
     assert result.exit_code == 0, result.output
     assert (tmp_path / "proj" / "specifications" / "delivery" / "tasks.md").exists()
 
@@ -44,17 +44,17 @@ def test_respec_diff_confirm(tmp_path):
     spec_file = next((tmp_path / "proj" / "specifications" / "product" / "specs").rglob("spec.md"))
 
     # перша чернетка — вільний запис (фаза ще не пройдена)
-    assert runner.invoke(app, ["spec", p, "--backend", "mock", "-d", "v1"]).exit_code == 0
+    assert runner.invoke(app, ["spec", p, "-d", "v1"]).exit_code == 0
     assert "v1" in spec_file.read_text(encoding="utf-8")
 
     # повторний запуск (re-spec) з відмовою → файл не змінено
-    r2 = runner.invoke(app, ["spec", p, "--backend", "mock", "-d", "v2"], input="n\n")
+    r2 = runner.invoke(app, ["spec", p, "-d", "v2"], input="n\n")
     assert r2.exit_code == 0
     assert "v1" in spec_file.read_text(encoding="utf-8")
     assert "v2" not in spec_file.read_text(encoding="utf-8")
 
     # повторний запуск з --yes → перезаписано
-    assert runner.invoke(app, ["spec", p, "--backend", "mock", "-d", "v3", "--yes"]).exit_code == 0
+    assert runner.invoke(app, ["spec", p, "-d", "v3", "--yes"]).exit_code == 0
     assert "v3" in spec_file.read_text(encoding="utf-8")
 
 

@@ -112,12 +112,8 @@ def _build_code_context(code_ctx: str, bundle: Path, instruction: str, extra: st
     return "\n\n".join(parts)
 
 
-def _draft(bundle: Path, persona: str, context: str, backend: str, model: str | None) -> str:
-    try:
-        return get_backend(backend, model).draft(persona, context)
-    except Exception as exc:
-        typer.secho(f"❌ {exc}", fg=typer.colors.RED)
-        raise typer.Exit(1) from exc
+def _draft(persona: str, context: str) -> str:
+    return get_backend().draft(persona, context)
 
 
 def _run_phase(
@@ -126,13 +122,11 @@ def _run_phase(
     persona: str,
     context: str,
     out_rel: str,
-    backend: str,
-    model: str | None,
     yes: bool,
 ) -> None:
     bundle = path / "specifications"
     updating = phase_done(path, phase)
-    draft = _draft(bundle, persona, context, backend, model)
+    draft = _draft(persona, context)
     out = bundle / out_rel
     written = _write_artifact(out, draft, updating=updating, yes=yes)
     if out.exists():
@@ -179,8 +173,6 @@ def init(
 def spec(
     path: Path = typer.Argument(Path("."), help="Тека проєкту"),
     description: str = typer.Option("", "--description", "-d", help="Опис проєкту/фічі"),
-    backend: str = typer.Option("mock", "--backend", help="AI-бекенд: mock | claude"),
-    model: str = typer.Option(None, "--model", help="Модель для claude-бекенду"),
     yes: bool = typer.Option(False, "--yes", "-y", help="Перезаписати без підтвердження"),
 ) -> None:
     """(BA) Чернетка вимог spec.md через персону (US-2, FR-003)."""
@@ -188,15 +180,13 @@ def spec(
     context = _build_context(bundle, description)
     _run_phase(
         path, "spec", "business-analyst", context,
-        "product/specs/001-feature/spec.md", backend, model, yes,
+        "product/specs/001-feature/spec.md", yes,
     )
 
 
 @app.command()
 def plan(
     path: Path = typer.Argument(Path("."), help="Тека проєкту"),
-    backend: str = typer.Option("mock", "--backend", help="AI-бекенд: mock | claude"),
-    model: str = typer.Option(None, "--model", help="Модель для claude-бекенду"),
     yes: bool = typer.Option(False, "--yes", "-y", help="Перезаписати без підтвердження"),
 ) -> None:
     """(SA) Технічний план plan.md за spec.md (US-3, FR-004)."""
@@ -208,14 +198,12 @@ def plan(
     context = (
         "# Requirements (spec.md)\n" + spec_text + "\n\nНапиши технічний план (plan.md) у Markdown."
     )
-    _run_phase(path, "plan", "solution-architect", context, "architecture/plan.md", backend, model, yes)
+    _run_phase(path, "plan", "solution-architect", context, "architecture/plan.md", yes)
 
 
 @app.command()
 def tasks(
     path: Path = typer.Argument(Path("."), help="Тека проєкту"),
-    backend: str = typer.Option("mock", "--backend", help="AI-бекенд: mock | claude"),
-    model: str = typer.Option(None, "--model", help="Модель для claude-бекенду"),
     yes: bool = typer.Option(False, "--yes", "-y", help="Перезаписати без підтвердження"),
 ) -> None:
     """Виведення задач delivery/tasks.md за plan.md (US-4, FR-005)."""
@@ -229,7 +217,7 @@ def tasks(
         + plan_file.read_text(encoding="utf-8")
         + "\n\nВиведи атомарні, трасовані задачі (tasks.md) у Markdown з галочками."
     )
-    _run_phase(path, "tasks", "developer", context, "delivery/tasks.md", backend, model, yes)
+    _run_phase(path, "tasks", "developer", context, "delivery/tasks.md", yes)
 
 
 @app.command()
@@ -279,11 +267,12 @@ def analyze(
     only: str = typer.Option("both", "--only", help="both | spec | review"),
     max_file_bytes: int = typer.Option(100_000, "--max-file-bytes", help="Ліміт на файл (байт)"),
     max_chars: int = typer.Option(200_000, "--max-chars", help="Ліміт контексту (символів)"),
-    backend: str = typer.Option("mock", "--backend", help="AI-бекенд: mock | claude"),
-    model: str = typer.Option(None, "--model", help="Модель для claude-бекенду"),
     yes: bool = typer.Option(False, "--yes", "-y", help="Перезаписати без підтвердження"),
 ) -> None:
-    """(Reverse) Спека + рев'ю НАЯВНОГО коду (brownfield). Реальний зміст — `--backend claude`."""
+    """(Reverse) Спека + рев'ю НАЯВНОГО коду (brownfield) — детермінований скафолдинг.
+
+    Реальний зміст — нативно через `/spec-forge analyze` у Claude Code (субагенти).
+    """
     if only not in ("both", "spec", "review"):
         raise typer.BadParameter("--only має бути: both | spec | review")
     if not source.is_dir():
@@ -303,23 +292,29 @@ def analyze(
             code_ctx, bundle,
             "Виведи ФАКТИЧНУ специфікацію продукту (spec.md) за цим кодом, з посиланнями на файли.",
         )
-        _run_phase(target, "analyze", "reverse-analyst", ctx, f"product/specs/{slug}/spec.md", backend, model, yes)
+        _run_phase(target, "analyze", "reverse-analyst", ctx, f"product/specs/{slug}/spec.md", yes)
 
     if only in ("both", "review"):
         inferred = bundle / "product" / "specs" / slug / "spec.md"
-        extra = ""
+        docs: list[str] = []
         if inferred.exists():
-            extra = "# Inferred spec (spec.md)\n" + inferred.read_text(encoding="utf-8")
+            docs.append("# Inferred spec (spec.md)\n" + inferred.read_text(encoding="utf-8"))
         expected = _read_first_spec(bundle)
         if expected and (not inferred.exists() or expected != inferred.read_text(encoding="utf-8")):
-            extra += "\n\n# Expected spec (наявна)\n" + expected
+            docs.append("# Expected spec (наявна)\n" + expected)
+        for rel in ("architecture/plan.md", "delivery/tasks.md"):
+            doc = bundle / rel
+            if doc.exists():
+                docs.append(f"# Existing doc ({rel})\n" + doc.read_text(encoding="utf-8"))
         ctx = _build_code_context(
             code_ctx, bundle,
-            "Склади рев'ю/gap-документ: що реалізовано, чого бракує/невірно, ДЕ виправити "
-            "(файл+секція), severity; вердикт чи все написано як треба.",
-            extra=extra,
+            "Звір ДОКИ (specifications/) з кодом. Склади рев'ю/gap-документ: чого бракує в доках, "
+            "недоліки й ДРЕЙФ (код змінився, доки — ні); ДЕ правити (док-файл + секція), severity; "
+            "для кожної розбіжності — конкретний варіант перезапису доку; вердикт чи доки відповідають "
+            "коду. Код не чіпай, перезапис доків лише пропонуй.",
+            extra="\n\n".join(docs),
         )
-        _run_phase(target, "review", "reviewer", ctx, f"product/specs/{slug}/review.md", backend, model, yes)
+        _run_phase(target, "review", "reviewer", ctx, f"product/specs/{slug}/review.md", yes)
 
 
 @app.command()
