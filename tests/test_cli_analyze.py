@@ -14,7 +14,7 @@ def _src(tmp_path):
 
 def test_analyze_both(tmp_path):
     src = _src(tmp_path)
-    result = runner.invoke(app, ["analyze", str(src), "--backend", "mock"])
+    result = runner.invoke(app, ["analyze", str(src)])
     assert result.exit_code == 0, result.output
     base = src / "specifications" / "product" / "specs" / "002-existing"
     assert (base / "spec.md").exists()
@@ -24,7 +24,7 @@ def test_analyze_both(tmp_path):
 
 def test_analyze_only_review(tmp_path):
     src = _src(tmp_path)
-    result = runner.invoke(app, ["analyze", str(src), "--backend", "mock", "--only", "review"])
+    result = runner.invoke(app, ["analyze", str(src), "--only", "review"])
     assert result.exit_code == 0, result.output
     base = src / "specifications" / "product" / "specs" / "002-existing"
     assert (base / "review.md").exists()
@@ -36,7 +36,7 @@ def test_analyze_slug_and_path(tmp_path):
     out = tmp_path / "out"
     result = runner.invoke(
         app,
-        ["analyze", str(src), "--path", str(out), "--slug", "custom", "--backend", "mock", "--only", "spec"],
+        ["analyze", str(src), "--path", str(out), "--slug", "custom", "--only", "spec"],
     )
     assert result.exit_code == 0, result.output
     assert (out / "specifications" / "product" / "specs" / "custom" / "spec.md").exists()
@@ -44,10 +44,10 @@ def test_analyze_slug_and_path(tmp_path):
 
 def test_analyze_invalid_only(tmp_path):
     src = _src(tmp_path)
-    result = runner.invoke(app, ["analyze", str(src), "--only", "bogus", "--backend", "mock"])
+    result = runner.invoke(app, ["analyze", str(src), "--only", "bogus"])
     assert result.exit_code != 0
 
 
 def test_analyze_missing_source(tmp_path):
-    result = runner.invoke(app, ["analyze", str(tmp_path / "nope"), "--backend", "mock"])
+    result = runner.invoke(app, ["analyze", str(tmp_path / "nope")])
     assert result.exit_code == 1

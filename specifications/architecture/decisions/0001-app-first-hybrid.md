@@ -11,8 +11,8 @@
 ## Decision
 - **App-first гібрид:** детермінований CLI-двигун + AI-субагенти для наповнення змістом.
 - **Modular monolith:** один процес, модулі з контрактними межами.
-- **Plugin seams:** `AIBackend` і `StackProfile` — інтерфейси; MVP-реалізації — Claude Agent SDK
-  та профілі python/node/go.
+- **Plugin seams:** `AIBackend` і `StackProfile` — інтерфейси; MVP-реалізації — `MockBackend`
+  (реальне наповнення — нативні субагенти Claude Code) та профілі python/node/go.
 
 ## Consequences
 **Позитивні**

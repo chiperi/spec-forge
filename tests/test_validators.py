@@ -26,6 +26,18 @@ def test_clarification_gate_fails(tmp_path):
     assert not by_gate["clarifications"].passed
 
 
+def test_clarification_gate_ignores_inline_code_mentions(tmp_path):
+    bundle = _bundle(tmp_path)
+    spec = next((bundle / "product" / "specs").rglob("spec.md"))
+    # згадка маркера як *терміна* (інлайн-код) — не «відкритий» маркер
+    spec.write_text(
+        spec.read_text() + "\nНемає незакритих `[NEEDS CLARIFICATION]` → гейт пройдено.\n",
+        encoding="utf-8",
+    )
+    by_gate = {r.gate: r for r in validate_bundle(bundle)}
+    assert by_gate["clarifications"].passed
+
+
 def test_structure_gate_fails_without_plan(tmp_path):
     bundle = _bundle(tmp_path)
     (bundle / "architecture" / "plan.md").unlink()
