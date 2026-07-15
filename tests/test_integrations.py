@@ -45,6 +45,14 @@ def test_command_self_upgrades_on_old_version(tmp_path):
     assert f"spec-forge-command v{WRAPPER_VERSION}" in cmd.read_text(encoding="utf-8")
 
 
+def test_wrapper_has_fill_wizard(tmp_path):
+    ensure_installed(tmp_path)
+    body = _cmd(tmp_path).read_text(encoding="utf-8")
+    assert "`fill`" in body  # маршрут майстра
+    assert "todo" in body.lower()  # живий чеклист прогресу
+    assert "TodoWrite" in body or "TaskCreate" in body  # todo-інструмент у allowed-tools
+
+
 def test_wrapper_is_subcommand_dispatcher(tmp_path):
     ensure_installed(tmp_path)
     body = _cmd(tmp_path).read_text(encoding="utf-8")
