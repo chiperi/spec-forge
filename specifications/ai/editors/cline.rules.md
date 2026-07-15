@@ -1,3 +1,3 @@
 # Cline rules
 
-<правила проєкту для Cline>
+<project rules for Cline>

@@ -1,45 +1,45 @@
 # AGENTS.md — spec-forge
 
-> ⭐ ЄДИНЕ джерело правди для всіх AI-агентів. `CLAUDE.md`/`GEMINI.md` → symlink на цей файл.
+> ⭐ The SINGLE source of truth for all AI agents. `CLAUDE.md`/`GEMINI.md` → symlink to this file.
 
 ## Project overview
-**spec-forge** — CLI-інструмент, що генерує якісну, портовану, AI/OS-friendly специфікацію
-(`specifications/` бандл) для **будь-якого** проєкту й стеку. Гібрид: детермінований двигун
-(скафолдинг + lifecycle + валідація) + AI-субагенти (BA/SA/Designer/Developer) для наповнення змістом.
-Повна спека продукту — у `../product/specs/001-spec-generation/spec.md`.
+**spec-forge** — a CLI tool that generates a high-quality, portable, AI/OS-friendly specification
+(`specifications/` bundle) for **any** project and stack. A hybrid: a deterministic engine
+(scaffolding + lifecycle + validation) + AI subagents (BA/SA/Designer/Developer) for content filling.
+The full product spec is in `../product/specs/001-spec-generation/spec.md`.
 
 ## Tech stack
-- Мова / рантайм: **Python 3.12+** (type hints)
+- Language / runtime: **Python 3.12+** (type hints)
 - CLI: **Typer**
-- Пакет-менеджер: **uv**
-- Тести: **pytest** (+ coverage)
-- Лінт/формат: **Ruff**
-- AI-наповнення: **нативно в Claude Code** через субагентів `/spec-forge` (на підписці Claude); CLI-бекенд — детермінований `mock`
-- Вихід тула (spec bundle) — **stack-agnostic**: цільовий стек задається stack-profile, не хардкодиться.
+- Package manager: **uv**
+- Tests: **pytest** (+ coverage)
+- Lint/format: **Ruff**
+- AI content filling: **natively in Claude Code** via `/spec-forge` subagents (on a Claude subscription); the CLI backend is a deterministic `mock`
+- The tool's output (spec bundle) is **stack-agnostic**: the target stack is set by a stack-profile, not hardcoded.
 
 ## Setup commands
 ```bash
-uv sync            # встановити залежності
-uv run spec-forge  # запустити CLI
-uv run pytest      # тести
-uv run ruff check  # лінт
-uv run ruff format # формат
+uv sync            # install dependencies
+uv run spec-forge  # run the CLI
+uv run pytest      # tests
+uv run ruff check  # lint
+uv run ruff format # format
 ```
-> Значення baseline; уточнюються на SA-фазі (`plan.md`).
+> Baseline values; refined in the SA phase (`plan.md`).
 
 ## Code style
-- Ruff (lint + format); type hints обовʼязкові; без `any`-подібних лазівок.
-- Ядро двигуна — детерміноване й тестоване; жодного хардкоду конкретного стеку в ядрі.
+- Ruff (lint + format); type hints are mandatory; no `any`-like loopholes.
+- The engine core is deterministic and tested; no hardcoding of a specific stack in the core.
 
 ## Testing
-- Unit — двигун (скафолдинг, рендер, валідатори); поріг coverage уточнюється в NFR.
-- Детермінізм: однакові входи → ідентичний вихід (перевіряти в CI, matrix по ОС).
+- Unit — the engine (scaffolding, rendering, validators); the coverage threshold is refined in the NFR.
+- Determinism: identical inputs → identical output (verified in CI, matrix across OSes).
 
 ## Workflow
-Спершу спека (`product/specs/`), потім архітектура (`architecture/plan.md` + `decisions/`), потім код.
-Фази з людським gate між ними. Важливі рішення → ADR у `../architecture/decisions/`.
+Spec first (`product/specs/`), then architecture (`architecture/plan.md` + `decisions/`), then code.
+Phases with a human gate between them. Important decisions → ADR in `../architecture/decisions/`.
 
 ## Security & guardrails
-- Не комітати секрети / `.env`.
-- Не змінювати структуру бандла мовчки — це артефакт шаблону.
-- Без масштабних рефакторингів «заодно» — тільки поставлена задача.
+- Do not commit secrets / `.env`.
+- Do not silently change the bundle structure — it is a template artifact.
+- No large-scale refactorings "along the way" — only the task at hand.

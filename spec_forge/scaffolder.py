@@ -1,4 +1,4 @@
-"""Детермінований скафолдер bundle specifications/ (FR-001)."""
+"""Deterministic scaffolder for the specifications/ bundle (FR-001)."""
 
 from __future__ import annotations
 
@@ -10,19 +10,19 @@ TEMPLATES_DIR = Path(__file__).parent / "templates" / "bundle"
 
 
 class BundleExistsError(Exception):
-    """specifications/ вже існує (для оновлення — режим re-spec, US-8)."""
+    """specifications/ already exists (to update it, use re-spec mode, US-8)."""
 
 
 def _iter_templates(root: Path) -> list[Path]:
-    # Детермінований, сортований обхід → байтова ідентичність (NFR-002/003).
+    # Deterministic, sorted traversal → byte-for-byte identity (NFR-002/003).
     return sorted((p for p in root.rglob("*") if p.is_file()), key=lambda p: p.as_posix())
 
 
 def scaffold(target: Path, context: dict) -> list[str]:
-    """Рендерить вбудований шаблон у <target>/specifications/. Повертає список файлів."""
+    """Renders the built-in template into <target>/specifications/. Returns the list of files."""
     bundle = target / "specifications"
     if bundle.exists():
-        raise BundleExistsError(f"{bundle} вже існує")
+        raise BundleExistsError(f"{bundle} already exists")
 
     env = Environment(
         loader=FileSystemLoader(str(TEMPLATES_DIR)),
@@ -45,7 +45,7 @@ def scaffold(target: Path, context: dict) -> list[str]:
         out.write_text(content, encoding="utf-8")
         written.append(out_rel.as_posix())
 
-    # ai-аліаси як symlinks на єдине джерело (AGENTS.md)
+    # ai aliases as symlinks to the single source (AGENTS.md)
     ai_agents = bundle / "ai" / "AGENTS.md"
     if ai_agents.exists():
         for alias in ("CLAUDE.md", "GEMINI.md"):

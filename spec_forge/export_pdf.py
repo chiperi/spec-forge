@@ -1,10 +1,10 @@
-"""Експорт усіх файлів bundle у єдиний PDF-знімок (FR-013).
+"""Export all bundle files into a single PDF snapshot (FR-013).
 
-Навіщо: команда відкриває один документ, вичитує всю специфікацію й позначає, у яких
-файлах треба зміни. Імʼя містить таймстемп; PDF складається в окрему теку `exports/`.
-Кирилиця — через вбудований DejaVuSans (базові PDF-шрифти її не підтримують). Іконки-емодзі
-(✅ ❌ ⬜ 🟡 ⭐ 🤖 …), яких немає в DejaVuSans, домальовуються з вбудованого Noto Emoji
-(monochrome) через per-glyph fallback fpdf2 — текст лишається DejaVu, іконки беруться з Noto.
+Why: the team opens one document, reads the entire specification, and marks which
+files need changes. The name contains a timestamp; the PDF is placed in a separate `exports/` directory.
+Cyrillic is handled via the embedded DejaVuSans (the base PDF fonts don't support it). Emoji icons
+(✅ ❌ ⬜ 🟡 ⭐ 🤖 …) that are missing from DejaVuSans are drawn from the embedded Noto Emoji
+(monochrome) via fpdf2's per-glyph fallback — text stays DejaVu, icons come from Noto.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ _SKIP_SUFFIXES = {
     ".png", ".jpg", ".jpeg", ".gif", ".ico", ".pdf",
     ".ttf", ".otf", ".woff", ".woff2", ".zip", ".gz",
 }
-_MAX_CHARS = 60_000  # захист від величезного файлу в одному PDF
+_MAX_CHARS = 60_000  # guard against a huge file in a single PDF
 
 
 def _timestamp() -> str:
@@ -49,10 +49,10 @@ def _text_files(bundle: Path) -> list[Path]:
 
 
 def export_bundle(project: Path, out_dirname: str = "exports") -> Path:
-    """Генерує PDF усіх текстових файлів specifications/. Повертає шлях до PDF."""
+    """Generates a PDF of all text files in specifications/. Returns the path to the PDF."""
     bundle = project / "specifications"
     if not bundle.exists():
-        raise FileNotFoundError(f"{bundle} не існує — спершу `spec-forge init`")
+        raise FileNotFoundError(f"{bundle} does not exist — run `spec-forge init` first")
 
     files = _text_files(bundle)
     ts = _timestamp()
@@ -60,29 +60,29 @@ def export_bundle(project: Path, out_dirname: str = "exports") -> Path:
     pdf = FPDF(format="A4", unit="mm")
     pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_font("DejaVu", "", str(FONT_PATH))
-    # Fallback для іконок-емодзі, яких немає в DejaVuSans (fpdf2 підставляє гліфи по-символьно).
+    # Fallback for emoji icons missing from DejaVuSans (fpdf2 substitutes glyphs per-character).
     if EMOJI_FONT_PATH.exists():
         pdf.add_font("NotoEmoji", "", str(EMOJI_FONT_PATH))
         pdf.set_fallback_fonts(["NotoEmoji"])
 
     def cell(height: float, text: str) -> None:
-        # new_x/new_y повертають курсор на лівий берег наступного рядка (fpdf2)
+        # new_x/new_y return the cursor to the left margin of the next line (fpdf2)
         pdf.multi_cell(0, height, text, wrapmode="CHAR", new_x="LMARGIN", new_y="NEXT")
 
-    # титул + зміст
+    # title + contents
     pdf.add_page()
     pdf.set_font("DejaVu", size=18)
-    cell(10, "spec-forge — знімок специфікації")
+    cell(10, "spec-forge — specification snapshot")
     pdf.set_font("DejaVu", size=10)
-    cell(6, f"Проєкт: {project.name}\nЗгенеровано: {ts}\nФайлів: {len(files)}")
+    cell(6, f"Project: {project.name}\nGenerated: {ts}\nFiles: {len(files)}")
     pdf.ln(3)
     pdf.set_font("DejaVu", size=12)
-    cell(7, "Зміст (перелік файлів для рев'ю):")
+    cell(7, "Contents (list of files for review):")
     pdf.set_font("DejaVu", size=9)
     for i, path in enumerate(files, 1):
         cell(5, f"{i:>3}. specifications/{path.relative_to(bundle).as_posix()}")
 
-    # по файлу — окрема сторінка
+    # one page per file
     for i, path in enumerate(files, 1):
         pdf.add_page()
         rel = path.relative_to(bundle).as_posix()
@@ -92,7 +92,7 @@ def export_bundle(project: Path, out_dirname: str = "exports") -> Path:
         pdf.set_font("DejaVu", size=8)
         content = path.read_text(encoding="utf-8")
         if len(content) > _MAX_CHARS:
-            content = content[:_MAX_CHARS] + "\n… (обрізано)"
+            content = content[:_MAX_CHARS] + "\n… (truncated)"
         cell(4, content)
 
     out_dir = project / out_dirname

@@ -1,4 +1,4 @@
-"""Stack-profiles — незалежність від стеку (seam, FR-007)."""
+"""Stack-profiles — stack independence (seam, FR-007)."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ class StackProfile:
     linter: str
     formatter: str
     test: str
-    pin: str  # рядок для .tool-versions (mise/asdf)
+    pin: str  # line for .tool-versions (mise/asdf)
 
     def render_context(self) -> dict[str, str]:
         return {
@@ -37,4 +37,4 @@ def get_profile(name: str) -> StackProfile:
         return PROFILES[name]
     except KeyError:
         available = ", ".join(sorted(PROFILES))
-        raise ValueError(f"Невідомий stack-profile: {name}. Доступні: {available}") from None
+        raise ValueError(f"Unknown stack-profile: {name}. Available: {available}") from None

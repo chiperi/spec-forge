@@ -24,9 +24,9 @@ def test_iter_prunes_and_filters(tmp_path):
     assert not any("node_modules" in n for n in names)
     assert not any(".venv" in n for n in names)
     assert not any(".git" in n for n in names)
-    assert "b.bin" not in names  # бінарний
-    assert "big.txt" not in names  # завеликий
-    assert files == sorted(files, key=lambda p: p.as_posix())  # детерміновано
+    assert "b.bin" not in names  # binary
+    assert "big.txt" not in names  # too large
+    assert files == sorted(files, key=lambda p: p.as_posix())  # deterministic
 
 
 def test_is_text_false_on_binary(tmp_path):

@@ -1,6 +1,6 @@
 # Project Constitution
 
-Незмінні принципи проєкту (найвищий рівень; на них спираються spec/plan/decisions).
+Immutable project principles (highest level; spec/plan/decisions build on them).
 
-1. <принцип>
-2. <принцип>
+1. <principle>
+2. <principle>

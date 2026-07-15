@@ -1,8 +1,8 @@
-"""AI-бекенди — seam над LLM (FR-010).
+"""AI backends — a seam over the LLM (FR-010).
 
-Один бекенд: `MockBackend` (детермінований, офлайн) — CLI-скафолдинг за замовчуванням.
-Реальний зміст генерується **нативно в Claude Code** через рольових субагентів (`/spec-forge`),
-на підписці Claude.
+A single backend: `MockBackend` (deterministic, offline) — the default CLI scaffolding.
+Real content is generated **natively in Claude Code** via role subagents (`/spec-forge`),
+on the Claude subscription.
 """
 
 from __future__ import annotations
@@ -13,11 +13,11 @@ from abc import ABC, abstractmethod
 class AIBackend(ABC):
     @abstractmethod
     def draft(self, persona: str, context: str) -> str:
-        """Повертає чернетку артефакту від імені персони."""
+        """Returns an artifact draft on behalf of the persona."""
 
 
 class MockBackend(AIBackend):
-    """Детермінований бекенд для тестів/офлайн."""
+    """Deterministic backend for tests/offline."""
 
     def draft(self, persona: str, context: str) -> str:
         return f"<!-- draft by {persona} (mock backend) -->\n\n{context}\n"
@@ -26,4 +26,4 @@ class MockBackend(AIBackend):
 def get_backend(name: str = "mock") -> AIBackend:
     if name == "mock":
         return MockBackend()
-    raise ValueError(f"Невідомий backend: {name}. Доступний: mock")
+    raise ValueError(f"Unknown backend: {name}. Available: mock")

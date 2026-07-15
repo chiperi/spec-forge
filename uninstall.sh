@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Прибрати slash-команду /spec-forge + видалити spec-forge.
-# Використання:  ./uninstall.sh
+# Remove the /spec-forge slash command + uninstall spec-forge.
+# Usage:  ./uninstall.sh
 set -euo pipefail
 
 export PATH="$HOME/.local/bin:$PATH"
 
-echo "→ Прибираю slash-команду /spec-forge ..."
-spec-forge command uninstall || true   # поки CLI ще доступний; не падати, якщо вже нема
+echo "→ Removing the /spec-forge slash command ..."
+spec-forge command uninstall || true   # while the CLI is still available; don't fail if already gone
 
-echo "→ Видаляю spec-forge ..."
+echo "→ Uninstalling spec-forge ..."
 uv tool uninstall spec-forge || true
 
-echo "✅ Готово: /spec-forge прибрано + spec-forge видалено."
+echo "✅ Done: /spec-forge removed + spec-forge uninstalled."

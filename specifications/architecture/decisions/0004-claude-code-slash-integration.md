@@ -1,30 +1,30 @@
-# ADR-0004: Інтеграція slash-команди /spec-forge (авто-provision)
+# ADR-0004: Integration of the /spec-forge slash command (auto-provision)
 
 **Status:** accepted
 **Date:** 2026-07-09
 **Deciders:** Developer
 
 ## Context
-Хотілося, щоб slash-команда Claude Code `/spec-forge` зʼявлялась і зникала «разом із аппкою».
-Проблема: Python/uv-wheel **не має хуків** на install/uninstall — не можна зачепитися за
+We wanted the Claude Code slash command `/spec-forge` to appear and disappear "together with the app".
+The problem: a Python/uv wheel **has no hooks** on install/uninstall — you cannot hook into
 `uv tool install/uninstall`.
 
 ## Decision
-- **Авто-додавання при першому запуску:** будь-яка команда CLI ідемпотентно створює
-  `~/.claude/commands/spec-forge.md` (create-if-missing, не перезаписує).
-- **Видалення:** `spec-forge command uninstall` (глобально або `--project`).
-- **Самозахист обгортки:** вона спершу перевіряє `command -v spec-forge`; якщо тула немає —
-  нічого не виконує (тож залишковий файл після `uv tool uninstall` нешкідливий).
+- **Auto-add on first run:** any CLI command idempotently creates
+  `~/.claude/commands/spec-forge.md` (create-if-missing, does not overwrite).
+- **Removal:** `spec-forge command uninstall` (globally or `--project`).
+- **Wrapper self-protection:** it first checks `command -v spec-forge`; if the tool is absent —
+  it does nothing (so a leftover file after `uv tool uninstall` is harmless).
 - **Opt-out:** `SPEC_FORGE_NO_SLASH=1`.
-- **Звʼязка з `uv tool` (Спосіб 1):** `install.sh` / `uninstall.sh` (+ `just install|uninstall`)
-  ставлять/знімають CLI і slash-обгортку **разом** — бо wheel-хуків на install/uninstall не існує.
+- **Binding with `uv tool` (Approach 1):** `install.sh` / `uninstall.sh` (+ `just install|uninstall`)
+  install/remove the CLI and the slash wrapper **together** — because wheel hooks on install/uninstall do not exist.
 
 ## Consequences
-**Позитивні**
-- Практично «зʼявляється з аппкою» без ручного кроку; прибирається однією командою.
-- Нема залежності від неіснуючих install-хуків.
+**Positive**
+- Practically "appears with the app" without a manual step; removed with a single command.
+- No dependency on non-existent install hooks.
 
-**Негативні / компроміси**
-- Справжнє авто-видалення на `uv tool uninstall` неможливе — лишається ручний `command uninstall`
-  (файл при цьому інертний завдяки самозахисту).
-- CLI пише у `~/.claude` (поза проєктом) — тому є явний opt-out.
+**Negative / trade-offs**
+- Real auto-removal on `uv tool uninstall` is impossible — a manual `command uninstall` remains
+  (the file being inert in the meantime thanks to self-protection).
+- The CLI writes to `~/.claude` (outside the project) — hence the explicit opt-out.

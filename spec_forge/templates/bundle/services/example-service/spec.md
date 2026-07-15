@@ -1,18 +1,18 @@
 # Service Spec: example-service
 
-**Owner:** <team>   **Bounded context:** <домен>
-> ЩО робить сервіс і навіщо — у межах СВОГО домену (single responsibility).
+**Owner:** <team>   **Bounded context:** <domain>
+> WHAT the service does and why — within ITS OWN domain (single responsibility).
 
 ## Responsibility
-<одна чітка відповідальність>
+<one clear responsibility>
 
 ## API surface
-- Sync: див. `contracts/openapi.yaml`
-- Async (events): див. `contracts/asyncapi.yaml`
+- Sync: see `contracts/openapi.yaml`
+- Async (events): see `contracts/asyncapi.yaml`
 
 ## Data owned
-<database-per-service: які дані належать саме цьому сервісу>
+<database-per-service: which data belongs to this service specifically>
 
 ## Requirements (FR / NFR)
 ## SLO
-<напр. availability 99.9%, p95 < 200ms>
+<e.g. availability 99.9%, p95 < 200ms>

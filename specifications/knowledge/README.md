@@ -1,3 +1,3 @@
 # knowledge/
 
-Доменні знання для агента: довідка, глосарій, бізнес-правила — те, чого немає в коді.
+Domain knowledge for the agent: reference, glossary, business rules — things that are not in the code.

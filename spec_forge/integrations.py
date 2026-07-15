@@ -1,13 +1,13 @@
-"""Інтеграція з Claude Code: slash-команда `/spec-forge` + рольові субагенти.
+"""Integration with Claude Code: the `/spec-forge` slash-command + role subagents.
 
-Python-пакети не мають хуків на install/uninstall, тож:
-- команда + субагенти створюються автоматично при першому запуску CLI (ідемпотентно) — cli._main;
-- прибираються командою `spec-forge command uninstall`;
-- команда **self-upgrade** за версією (маркер `<!-- spec-forge-command vN -->` у файлі).
+Python packages have no install/uninstall hooks, so:
+- the command + subagents are created automatically on the first CLI run (idempotently) — cli._main;
+- they are removed by the `spec-forge command uninstall` command;
+- the command **self-upgrades** by version (the marker `<!-- spec-forge-command vN -->` in the file).
 
-Runtime `/spec-forge` — це **диспетчер підкоманд**: `/spec-forge <підкоманда>` виконує точний
-функціонал CLI. Контент (spec/plan/tasks/analyze/fill) генерується нативно в Claude Code (головний тред +
-субагенти) на підписці Claude; механічні (init/validate/export/deploy/status) — локальним CLI.
+The runtime `/spec-forge` is a **subcommand dispatcher**: `/spec-forge <subcommand>` runs the exact
+CLI functionality. Content (spec/plan/tasks/analyze/fill) is generated natively in Claude Code (main thread +
+subagents) on the Claude subscription; the mechanical ones (init/validate/export/deploy/status) — via the local CLI.
 """
 
 from __future__ import annotations
@@ -21,73 +21,73 @@ AGENTS_SRC = Path(__file__).parent / "templates" / "bundle" / "ai" / "agents"
 
 _WRAPPER = """\
 ---
-description: Точні підкоманди spec-forge нативно в Claude Code (spec/plan/tasks/analyze/fill…), на підписці
-argument-hint: <підкоманда> [аргументи] — spec | plan | tasks | analyze | fill | init | validate | export | deploy | status
+description: Exact spec-forge subcommands natively in Claude Code (spec/plan/tasks/analyze/fill…), on the subscription
+argument-hint: <subcommand> [arguments] — spec | plan | tasks | analyze | fill | init | validate | export | deploy | status
 allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash, TodoWrite, TaskCreate, TaskUpdate, TaskList
 ---
 <!-- spec-forge-command v6 -->
 
-Ти — **диспетчер** `/spec-forge <підкоманда> [аргументи]`. **Перший токен** `$ARGUMENTS` — це
-підкоманда (той самий набір, що й у CLI `spec-forge`). Виконай ТОЧНО відповідний функціонал у теці
-`specifications/` поточного проєкту. Не вгадуй «ціль своїми словами» — маршрутизуй за підкомандою.
+You are the **dispatcher** `/spec-forge <subcommand> [arguments]`. The **first token** of `$ARGUMENTS` is the
+subcommand (the same set as in the `spec-forge` CLI). Run EXACTLY the corresponding functionality in the
+`specifications/` directory of the current project. Don't guess "the target in your own words" — route by subcommand.
 
-Два класи підкоманд:
-- **Контент** (`spec`, `plan`, `tasks`, `analyze`, `fill`) — генеруй **нативно тут**, у Claude Code, через
-  рольових субагентів (`Task`). НЕ викликай CLI — контент генерується тут, на підписці Claude.
-- **Механічні / детерміновані** (`init`, `validate`, `export`, `deploy`, `status`) — виконай локальний
-  CLI: у терміналі `spec-forge $ARGUMENTS`, покажи вивід. Вони безкоштовні й детерміновані. Якщо
-  `spec-forge` не знайдено (`command -v spec-forge`) — скажи, як поставити, і зупинись.
+Two classes of subcommands:
+- **Content** (`spec`, `plan`, `tasks`, `analyze`, `fill`) — generate **natively here**, in Claude Code, via
+  role subagents (`Task`). Do NOT call the CLI — content is generated here, on the Claude subscription.
+- **Mechanical / deterministic** (`init`, `validate`, `export`, `deploy`, `status`) — run the local
+  CLI: in the terminal `spec-forge $ARGUMENTS`, show the output. They are free and deterministic. If
+  `spec-forge` is not found (`command -v spec-forge`) — say how to install it, and stop.
 
-## Маршрутизація
+## Routing
 
-### `spec [опис]` — BA → `specifications/product/specs/001-feature/spec.md`
-Якщо вхідних бракує — коротко доуточни у діалозі (субагент не вміє питати користувача) і закрий
-`[NEEDS CLARIFICATION]`. Тоді делегуй `Task` (subagent_type: `business-analyst`) з **повним брифом**
-→ spec.md: EARS / Given-When-Then, тестовані user stories (P1 = MVP), вимірювані success criteria,
-glossary. **Гейт.**
+### `spec [description]` — BA → `specifications/product/specs/001-feature/spec.md`
+If inputs are missing — briefly clarify in the dialogue (a subagent can't ask the user) and close out
+`[NEEDS CLARIFICATION]`. Then delegate to `Task` (subagent_type: `business-analyst`) with a **full brief**
+→ spec.md: EARS / Given-When-Then, testable user stories (P1 = MVP), measurable success criteria,
+glossary. **Gate.**
 
 ### `plan` — SA → `specifications/architecture/plan.md`
-Прочитай spec.md. `Task` (subagent_type: `solution-architect`) → `architecture/plan.md` + ADR у
-`architecture/decisions/` + контракти `contracts/openapi.yaml` (за потреби asyncapi.yaml), NFR у числах. **Гейт.**
+Read spec.md. `Task` (subagent_type: `solution-architect`) → `architecture/plan.md` + ADR in
+`architecture/decisions/` + contracts `contracts/openapi.yaml` (asyncapi.yaml if needed), NFR in numbers. **Gate.**
 
 ### `tasks` — Developer → `specifications/delivery/tasks.md`
-Прочитай plan.md. `Task` (subagent_type: `developer`) → атомарні трасовані задачі. **Гейт.**
+Read plan.md. `Task` (subagent_type: `developer`) → atomic, traceable tasks. **Gate.**
 
-### `analyze [тека]` — brownfield: спека з коду + аудит дрейфу доків (in-place, код не чіпаємо)
-Ціль — тека з `$ARGUMENTS` (типово `.`). Делегуй `Task` (subagent_type: `reverse-analyst`) — він сам
-читає код цілі (пропускаючи `node_modules`, `.venv`, `.git`, бінарні/великі файли) →
-`specifications/product/specs/002-existing/spec.md` (фактична спека, з посиланнями на файли). Тоді
-`Task` (subagent_type: `reviewer`) — дай йому і наявні доки `specifications/`, і код: він **звіряє доки з
-кодом**, знаходить чого бракує/недоліки й **дрейф** (код змінився, доки — ні) → `.../002-existing/review.md`
-з **конкретними варіантами перезапису доків** (не застосовуй їх без підтвердження). **Гейт.**
+### `analyze [directory]` — brownfield: spec from code + doc-drift audit (in-place, we don't touch the code)
+The target is the directory from `$ARGUMENTS` (default `.`). Delegate to `Task` (subagent_type: `reverse-analyst`) — it
+reads the target's code itself (skipping `node_modules`, `.venv`, `.git`, binary/large files) →
+`specifications/product/specs/002-existing/spec.md` (the actual spec, with references to files). Then
+`Task` (subagent_type: `reviewer`) — give it both the existing docs `specifications/` and the code: it **reconciles the docs
+against the code**, finds what is missing/deficiencies and **drift** (code changed, docs didn't) → `.../002-existing/review.md`
+with **concrete doc-rewrite options** (don't apply them without confirmation). **Gate.**
 
-### `fill` — покроковий майстер: заповнити ВСІ файли `specifications/` (native, з чеклистом прогресу)
-Ціль — `specifications/` поточного проєкту (якщо бандла нема — спершу `init`). Режим **авто-чернетка → підтвердження**.
+### `fill` — step-by-step wizard: fill ALL `specifications/` files (native, with a progress checklist)
+The target is the current project's `specifications/` (if there's no bundle — run `init` first). Mode: **auto-draft → confirmation**.
 
-1. **Побудуй живий чеклист** (права todo-панель): `TodoWrite` (або `TaskCreate`/`TaskUpdate` — що доступно),
-   по пункту на кожен **контентний** файл бандла, у порядку залежностей:
+1. **Build a live checklist** (the right-hand todo panel): `TodoWrite` (or `TaskCreate`/`TaskUpdate` — whichever is available),
+   one item per **content** file of the bundle, in dependency order:
    `00-constitution.md` → `product/specs/**/spec.md` → `architecture/plan.md` → `architecture/decisions/*` →
    `contracts/*` → `architecture/nfr.md` → `delivery/tasks.md` → `design/*` → `roles/*` → `knowledge/*` → `README.md`.
-   Суто **конфіг/детерміновані** файли (`.editorconfig`, `mcp.json`, `settings.json`, `tool-versions`,
-   `gitattributes`, `editors/*`, `hooks/*`) познач як «scaffolded ✅ (skip)» — їх не заповнюємо інтерв'ю.
-2. **Іди покроково.** На кожен файл (пункт → in-progress):
-   - прочитай код проєкту (`Read`/`Grep`/`Glob`) і **накопичені відповіді з попередніх кроків**;
-   - **сам зроби чернетку** (`Write`/`Edit`), узгоджену з кодом і вже заповненими файлами; де бракує входу — `[NEEDS CLARIFICATION]`;
-   - покажи, що записав, і **зупинись на підтвердження** — користувач приймає/править (гейт);
-   - онови пункт → ✅ і переходь до наступного.
-3. Кожна відповідь користувача — **контекст для наступних кроків**: не питай двічі те, що вже відомо;
-   пропонуй, спираючись на попереднє. Наприкінці запусти `spec-forge validate` (усі гейти зелені).
+   Mark purely **config/deterministic** files (`.editorconfig`, `mcp.json`, `settings.json`, `tool-versions`,
+   `gitattributes`, `editors/*`, `hooks/*`) as "scaffolded ✅ (skip)" — we don't fill those via interview.
+2. **Go step by step.** For each file (item → in-progress):
+   - read the project's code (`Read`/`Grep`/`Glob`) and the **accumulated answers from previous steps**;
+   - **draft it yourself** (`Write`/`Edit`), consistent with the code and the already-filled files; where input is missing — `[NEEDS CLARIFICATION]`;
+   - show what you wrote, and **stop for confirmation** — the user accepts/edits (gate);
+   - update the item → ✅ and move on to the next.
+3. Each user answer is **context for the next steps**: don't ask twice for what's already known;
+   make suggestions based on what came before. At the end run `spec-forge validate` (all gates green).
 
-Важке (spec/plan/tasks) за потреби делегуй відповідному субагенту (`Task`), але **дай у бриф накопичений контекст**.
+Delegate the heavy parts (spec/plan/tasks) to the appropriate subagent (`Task`) when needed, but **put the accumulated context into the brief**.
 
 ### `init` / `validate` / `export` / `deploy` / `status`
-Виконай `spec-forge $ARGUMENTS` у терміналі й покажи вивід (детерміновано, локально).
+Run `spec-forge $ARGUMENTS` in the terminal and show the output (deterministic, local).
 
-### порожньо або `help`
-Покажи список підкоманд вище (по рядку-опису на кожну) і зупинись.
+### empty or `help`
+Show the list of subcommands above (one description line per subcommand) and stop.
 
-Правила: делегуючи, давай самодостатній бриф (субагент не бачить цей діалог); людський гейт після
-кожної контентної фази; повторний запуск = оновлення, не дубль; код проєкту без окремого прохання не змінюй.
+Rules: when delegating, provide a self-contained brief (the subagent doesn't see this dialogue); a human gate after
+each content phase; a repeat run = update, not a duplicate; don't change the project's code without a separate request.
 """
 
 
@@ -141,7 +141,7 @@ def _installed_version(text: str) -> int:
 
 
 def ensure_command_installed(project_root: Path | None = None, *, force: bool = False) -> tuple[Path, bool]:
-    """Пише команду, якщо її нема / стара версія / force. Повертає (шлях, чи_записано)."""
+    """Writes the command if it's missing / an old version / force. Returns (path, whether_written)."""
     path = command_path(project_root)
     if not force and path.exists() and _installed_version(path.read_text(encoding="utf-8")) >= WRAPPER_VERSION:
         return path, False
@@ -151,7 +151,7 @@ def ensure_command_installed(project_root: Path | None = None, *, force: bool = 
 
 
 def ensure_agents_installed(project_root: Path | None = None, *, force: bool = False) -> list[Path]:
-    """Копіює бандл-субагентів (create-if-missing, або force). Повертає записані шляхи."""
+    """Copies the bundled subagents (create-if-missing, or force). Returns the written paths."""
     created: list[Path] = []
     target = agents_dir(project_root)
     for src in bundled_agent_files():

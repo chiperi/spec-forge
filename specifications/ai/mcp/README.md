@@ -1,5 +1,5 @@
 # mcp/
 
-MCP-сервери = зовнішні **tools** і контекст для агента (БД, API, файли, пошук…).
-Проєктний конфіг деплоїться в корінь як `.mcp.json`. Це «tools» у сенсі можливостей —
-не плутати з полем `tools:` у субагентах (то дозволені вбудовані інструменти).
+MCP servers = external **tools** and context for the agent (DB, API, files, search…).
+The project config is deployed to the root as `.mcp.json`. These are "tools" in the sense of capabilities —
+not to be confused with the `tools:` field in subagents (which lists the allowed built-in tools).

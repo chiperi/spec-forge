@@ -1,4 +1,4 @@
-# Крос-платформний task-runner (just). Аналоги: Makefile / Taskfile.yml
+# Cross-platform task runner (just). Alternatives: Makefile / Taskfile.yml
 # install:
 #     <install>
 # test:

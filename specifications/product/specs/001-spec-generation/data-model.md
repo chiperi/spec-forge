@@ -1,3 +1,3 @@
-# Data Model: <назва фічі>
+# Data Model: <feature name>
 
-> Сутності, поля, звʼязки, індекси.
+> Entities, fields, relationships, indexes.

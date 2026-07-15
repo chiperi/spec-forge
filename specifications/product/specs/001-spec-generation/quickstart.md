@@ -1,3 +1,3 @@
-# Quickstart: <назва фічі>
+# Quickstart: <feature name>
 
-> Як швидко запустити/перевірити фічу після реалізації.
+> How to quickly run/verify the feature after implementation.

@@ -1,11 +1,11 @@
 # Service Catalog
 
-Реєстр сервісів: хто є хто, хто чим володіє, контракти й SLO.
-(Потрібен для мікросервісів; бажаний для гібрида.)
+A registry of services: who is who, who owns what, contracts and SLO.
+(Required for microservices; desirable for a hybrid.)
 
-| Сервіс | Owner (команда) | Тип API | Контракти | SLO | Залежить від |
+| Service | Owner (team) | API type | Contracts | SLO | Depends on |
 |--------|-----------------|---------|-----------|-----|--------------|
 | example-service | <team> | REST + events | openapi.yaml, asyncapi.yaml | 99.9% · p95<200ms | <deps> |
 
-> Правила: кожен сервіс — окремий деплой і версія · database-per-service ·
-> зміни контрактів — backward-compatible, обидві команди свідомі.
+> Rules: each service — its own deployment and version · database-per-service ·
+> contract changes — backward-compatible, with both teams aware.

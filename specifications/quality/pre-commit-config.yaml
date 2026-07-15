@@ -1,4 +1,4 @@
-# Ті самі перевірки локально до коміту
+# The same checks locally before commit
 # repos:
 #   - repo: local
 #     hooks:

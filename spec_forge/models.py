@@ -1,4 +1,4 @@
-"""Моделі даних (pydantic)."""
+"""Data models (pydantic)."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ class Phase(str, Enum):
 
 
 class InterviewAnswers(BaseModel):
-    """Відповіді інтервʼю, з яких будується контекст рендеру."""
+    """Interview answers used to build the render context."""
 
     project_name: str
     stack: str = "python"

@@ -1,5 +1,5 @@
 ---
-description: Приклад кастомної slash-команди
+description: Example of a custom slash command
 ---
 
-<текст промпта, який виконає команда, коли викликати /example>
+<the prompt text the command will run when you invoke /example>

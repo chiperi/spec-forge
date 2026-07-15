@@ -1,3 +1,3 @@
-# <Домен> — нотатки
+# <Domain> — notes
 
-<факти, правила й нюанси домену, які агент має знати>
+<facts, rules, and domain nuances the agent needs to know>

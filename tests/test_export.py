@@ -22,21 +22,21 @@ def test_export_creates_timestamped_pdf(tmp_path):
 
 
 def test_emoji_font_is_bundled():
-    assert EMOJI_FONT_PATH.exists(), "Noto Emoji fallback має їхати в пакеті"
+    assert EMOJI_FONT_PATH.exists(), "Noto Emoji fallback must ship in the package"
 
 
 def test_export_renders_emoji_via_fallback(tmp_path, caplog):
-    """Файл з емодзі експортується: обидва шрифти вбудовано, без missing-glyph попереджень."""
+    """A file with emoji exports: both fonts embedded, no missing-glyph warnings."""
     scaffold(tmp_path, _ctx())
     (tmp_path / "specifications" / "ICONS.md").write_text(
-        "Статус: ✅ ❌ ⬜ 🟡 ⭐ 🤖 👤 🏛 🔌 🧩 🎨 🛠 💻 👥 🧠 📌", encoding="utf-8"
+        "Status: ✅ ❌ ⬜ 🟡 ⭐ 🤖 👤 🏛 🔌 🧩 🎨 🛠 💻 👥 🧠 📌", encoding="utf-8"
     )
     with caplog.at_level(logging.WARNING, logger="fpdf"):
         out = export_bundle(tmp_path)
     data = out.read_bytes()
-    assert b"NotoEmoji" in data and b"DejaVuSans" in data  # обидва субсети вбудовано
+    assert b"NotoEmoji" in data and b"DejaVuSans" in data  # both subsets embedded
     missing = [r for r in caplog.records if "not available" in r.getMessage().lower()]
-    assert not missing, f"є символи без гліфа: {[r.getMessage() for r in missing]}"
+    assert not missing, f"characters without a glyph: {[r.getMessage() for r in missing]}"
 
 
 def test_export_missing_bundle_raises(tmp_path):

@@ -1,6 +1,6 @@
 # Traceability Matrix
 
-Звʼязок вимога → дизайн/рішення → задача → тест. Ніщо не «загубилось».
+The link requirement → design/decision → task → test. Nothing gets "lost".
 
 | Requirement | Design / ADR | Task | Test | Status |
 |-------------|--------------|------|------|--------|

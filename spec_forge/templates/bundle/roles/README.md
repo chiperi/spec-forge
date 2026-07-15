@@ -1,26 +1,26 @@
-# roles/ — інструкції для ролей
+# roles/ — role instructions
 
-Рольові інструкції для команди (людей **або** AI-агентів, що грають роль). Кожен файл = одна персона:
-хто вона, що робить, який артефакт віддає, чого **не** робить, і кому передає.
+Role instructions for the team (people **or** AI agents playing the role). Each file = one persona:
+who they are, what they do, which artifact they deliver, what they do **not** do, and whom they hand off to.
 
-Це прямо лягає на spec-driven цикл:
+This maps directly onto the spec-driven cycle:
 
 ```
-Business Analyst → spec.md            (ЩО/НАВІЩО, вимоги)
+Business Analyst → spec.md            (WHAT/WHY, requirements)
         ↓
-Solution Architect → plan.md + decisions/ + contracts/   (ЯК, архітектура, NFR, контракти)
+Solution Architect → plan.md + decisions/ + contracts/   (HOW, architecture, NFR, contracts)
         ↓                    ↘
-Designer → design/ (UX/UI)    Developer → src/ + tests/ (реалізація за tasks.md)
+Designer → design/ (UX/UI)    Developer → src/ + tests/ (implementation per tasks.md)
 ```
 
-| Роль | Файл | Володіє артефактом |
+| Role | File | Owns the artifact |
 |------|------|--------------------|
 | Business Analyst | [business-analyst.md](business-analyst.md) | `spec.md`, glossary |
 | Solution Architect | [solution-architect.md](solution-architect.md) | `plan.md`, `decisions/`, `contracts/`, NFR |
 | Designer (UX/UI) | [designer.md](designer.md) | design specs, a11y |
 | Developer | [developer.md](developer.md) | `src/`, `tests/`, `tasks.md` |
 
-## Як застосувати
-- **Як гайд для людей** — читає той, хто грає роль.
-- **Як AI-субагента** — скопіюй суть у `.claude/agents/<role>.md` (frontmatter + промпт) і виклич під задачу.
-- Ключове в кожному файлі — **межі (boundaries)**: чого роль НЕ робить (щоб агент не «розповзався»).
+## How to apply
+- **As a guide for people** — read by whoever plays the role.
+- **As an AI subagent** — copy the essence into `.claude/agents/<role>.md` (frontmatter + prompt) and invoke it for the task.
+- The key part of each file is the **boundaries**: what the role does NOT do (so the agent doesn't "sprawl").

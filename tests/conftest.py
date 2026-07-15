@@ -1,4 +1,4 @@
 import os
 
-# Тести не мають торкатися реального ~/.claude — вимикаємо авто-встановлення slash-обгортки.
+# Tests must not touch the real ~/.claude — disable auto-installation of the slash wrapper.
 os.environ.setdefault("SPEC_FORGE_NO_SLASH", "1")

@@ -1,40 +1,40 @@
-# ADR-0006: Нативний `/spec-forge` — диспетчер точних підкоманд (на підписці)
+# ADR-0006: Native `/spec-forge` — a dispatcher of exact subcommands (on subscription)
 
 **Status:** accepted
 **Date:** 2026-07-09
 **Deciders:** Developer
 
 ## Context
-Тонка обгортка `/spec-forge` просто запускала CLI. Потрібен нативний флоу, що виконує **той самий
-функціонал, що й CLI**, генеруючи контент прямо в Claude Code силами рольових субагентів
-(на **Claude Max**-підписці).
+The thin `/spec-forge` wrapper simply launched the CLI. We need a native flow that performs **the same
+functionality as the CLI**, generating content directly in Claude Code with role subagents
+(on a **Claude Max** subscription).
 
 ## Decision
-- Переписати `_WRAPPER` на **диспетчер точних підкоманд** (`v3`): `/spec-forge <підкоманда>` мапиться
-  на той самий набір, що й CLI. **Контентні** підкоманди (`spec`/`plan`/`tasks`/`analyze`) виконуються
-  нативно в Claude Code через делегування рольовим субагентам (`Task`); **механічні** (`init`/`validate`/
-  `export`/`deploy`/`status`) — локальним CLI (детерміновано, безкоштовно). Людський гейт після контентної фази.
-  > Історія: `v2` був діалоговим оркестратором, що «вгадував ціль своїми словами»; `v3` перейшов на
-  > точні підкоманди на прохання користувача — щоб `/spec-forge plan`, `/spec-forge analyze` викликали
-  > саме той реалізований функціонал.
-- Контент — усе на **Claude Max-підписці** (нативно в Claude Code); механічні підкоманди — через
-  вже встановлений CLI.
-- Встановлювати **7 рольових субагентів** у `~/.claude/agents/` (щоб делегування працювало в будь-якому
-  проєкті); джерело — `spec_forge/templates/bundle/ai/agents/*.md`. Для `analyze` додано `reverse-analyst`
-  (фактична спека) і `reviewer` (gap/рев'ю), що дзеркалять персони CLI-режиму `analyze` (ADR-0005).
-- **Self-upgrade** команди за версією-маркером (`<!-- spec-forge-command vN -->`);
-  `command install --force` оновлює команду + агентів.
-- Розширює ADR-0004 (авто-provision).
+- Rewrite `_WRAPPER` into a **dispatcher of exact subcommands** (`v3`): `/spec-forge <subcommand>` maps
+  to the same set as the CLI. The **content** subcommands (`spec`/`plan`/`tasks`/`analyze`) run
+  natively in Claude Code by delegating to role subagents (`Task`); the **mechanical** ones (`init`/`validate`/
+  `export`/`deploy`/`status`) — to the local CLI (deterministic, free). A human gate after the content phase.
+  > History: `v2` was a conversational orchestrator that "guessed the target in its own words"; `v3` switched to
+  > exact subcommands at the user's request — so that `/spec-forge plan`, `/spec-forge analyze` invoke
+  > exactly the implemented functionality.
+- Content — everything on the **Claude Max subscription** (natively in Claude Code); the mechanical subcommands — via
+  the already-installed CLI.
+- Install **7 role subagents** in `~/.claude/agents/` (so that delegation works in any
+  project); the source is `spec_forge/templates/bundle/ai/agents/*.md`. For `analyze`, `reverse-analyst`
+  (the actual spec) and `reviewer` (gap/review) were added, mirroring the personas of the CLI's `analyze` mode (ADR-0005).
+- **Self-upgrade** of the command by a version marker (`<!-- spec-forge-command vN -->`);
+  `command install --force` updates the command + the agents.
+- Extends ADR-0004 (auto-provision).
 
 ## Consequences
-**Позитивні**
-- Працює **на підписці Claude Max**; контент генерується нативно рольовими персонами.
-- `/spec-forge <підкоманда>` = точний, передбачуваний функціонал CLI, а не вільна інтерпретація тексту.
-- Субагенти доступні глобально — флоу працює в будь-якому проєкті.
+**Positive**
+- Works **on the Claude Max subscription**; content is generated natively by role personas.
+- `/spec-forge <subcommand>` = exact, predictable CLI functionality, not a free interpretation of text.
+- The subagents are available globally — the flow works in any project.
 
-**Негативні / компроміси**
-- Механічні підкоманди залежать від наявного локального CLI `spec-forge` (перевірка `command -v`;
-  якщо нема — команда просить встановити й зупиняється).
-- Установка команди/агентів усе ще через `command install` / auto-callback (одноразово); окремий
-  Claude Code plugin (plugin.json + marketplace) — поза скоупом.
-- Субагенти неінтерактивні (окремий тред) → доуточнення в головному треді, делегування з повним брифом.
+**Negative / trade-offs**
+- The mechanical subcommands depend on the presence of the local `spec-forge` CLI (a `command -v` check;
+  if it is absent — the command asks to install it and stops).
+- Installing the command/agents is still via `command install` / auto-callback (one-time); a separate
+  Claude Code plugin (plugin.json + marketplace) is out of scope.
+- The subagents are non-interactive (a separate thread) → clarifications in the main thread, delegation with a full brief.
