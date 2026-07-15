@@ -6,7 +6,7 @@ Python packages have no install/uninstall hooks, so:
 - the command **self-upgrades** by version (the marker `<!-- spec-forge-command vN -->` in the file).
 
 The runtime `/spec-forge` is a **subcommand dispatcher**: `/spec-forge <subcommand>` runs the exact
-CLI functionality. Content (spec/plan/tasks/analyze/fill) is generated natively in Claude Code (main thread +
+CLI functionality. Content (spec/plan/tasks/design/analyze/fill) is generated natively in Claude Code (main thread +
 subagents) on the Claude subscription; the mechanical ones (init/validate/export/deploy/status) — via the local CLI.
 """
 
@@ -16,24 +16,26 @@ from pathlib import Path
 from typing import NamedTuple
 
 WRAPPER_NAME = "spec-forge.md"
-WRAPPER_VERSION = 6
+WRAPPER_VERSION = 7
 AGENTS_SRC = Path(__file__).parent / "templates" / "bundle" / "ai" / "agents"
 
 _WRAPPER = """\
 ---
-description: Exact spec-forge subcommands natively in Claude Code (spec/plan/tasks/analyze/fill…), on the subscription
-argument-hint: <subcommand> [arguments] — spec | plan | tasks | analyze | fill | init | validate | export | deploy | status
+description: Exact spec-forge subcommands natively in Claude Code (spec/plan/tasks/design/analyze/fill…), on the subscription
+argument-hint: <subcommand> [arguments] — spec | plan | tasks | design | analyze | fill | init | validate | export | deploy | status
 allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash, TodoWrite, TaskCreate, TaskUpdate, TaskList
 ---
-<!-- spec-forge-command v6 -->
+<!-- spec-forge-command v7 -->
 
 You are the **dispatcher** `/spec-forge <subcommand> [arguments]`. The **first token** of `$ARGUMENTS` is the
 subcommand (the same set as in the `spec-forge` CLI). Run EXACTLY the corresponding functionality in the
 `specifications/` directory of the current project. Don't guess "the target in your own words" — route by subcommand.
 
 Two classes of subcommands:
-- **Content** (`spec`, `plan`, `tasks`, `analyze`, `fill`) — generate **natively here**, in Claude Code, via
+- **Content** (`spec`, `plan`, `tasks`, `design`, `analyze`, `fill`) — generate **natively here**, in Claude Code, via
   role subagents (`Task`). Do NOT call the CLI — content is generated here, on the Claude subscription.
+  When to use which: single phases (`spec`/`plan`/`tasks`/`design`) for **targeted, one-artifact** updates;
+  `fill` for a **guided pass over the whole bundle**; `analyze` for **brownfield** (reverse-engineer + doc-drift).
 - **Mechanical / deterministic** (`init`, `validate`, `export`, `deploy`, `status`) — run the local
   CLI: in the terminal `spec-forge $ARGUMENTS`, show the output. They are free and deterministic. If
   `spec-forge` is not found (`command -v spec-forge`) — say how to install it, and stop.
@@ -52,6 +54,10 @@ Read spec.md. `Task` (subagent_type: `solution-architect`) → `architecture/pla
 
 ### `tasks` — Developer → `specifications/delivery/tasks.md`
 Read plan.md. `Task` (subagent_type: `developer`) → atomic, traceable tasks. **Gate.**
+
+### `design` (optional) — Designer → `specifications/design/<feature>.design.md`
+Read spec.md (and plan.md if present). `Task` (subagent_type: `designer`) → user flows, component states,
+design system, accessibility (a11y). An optional phase between `plan` and `tasks` for UI-bearing features. **Gate.**
 
 ### `analyze [directory]` — brownfield: spec from code + doc-drift audit (in-place, we don't touch the code)
 The target is the directory from `$ARGUMENTS` (default `.`). Delegate to `Task` (subagent_type: `reverse-analyst`) — it
@@ -132,7 +138,7 @@ def _installed_version(text: str) -> int:
     if idx == -1:
         return 0
     digits = ""
-    for ch in text[idx + len(marker):]:
+    for ch in text[idx + len(marker) :]:
         if ch.isdigit():
             digits += ch
         else:
@@ -140,17 +146,25 @@ def _installed_version(text: str) -> int:
     return int(digits) if digits else 0
 
 
-def ensure_command_installed(project_root: Path | None = None, *, force: bool = False) -> tuple[Path, bool]:
+def ensure_command_installed(
+    project_root: Path | None = None, *, force: bool = False
+) -> tuple[Path, bool]:
     """Writes the command if it's missing / an old version / force. Returns (path, whether_written)."""
     path = command_path(project_root)
-    if not force and path.exists() and _installed_version(path.read_text(encoding="utf-8")) >= WRAPPER_VERSION:
+    if (
+        not force
+        and path.exists()
+        and _installed_version(path.read_text(encoding="utf-8")) >= WRAPPER_VERSION
+    ):
         return path, False
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(_WRAPPER, encoding="utf-8")
     return path, True
 
 
-def ensure_agents_installed(project_root: Path | None = None, *, force: bool = False) -> list[Path]:
+def ensure_agents_installed(
+    project_root: Path | None = None, *, force: bool = False
+) -> list[Path]:
     """Copies the bundled subagents (create-if-missing, or force). Returns the written paths."""
     created: list[Path] = []
     target = agents_dir(project_root)
@@ -163,7 +177,9 @@ def ensure_agents_installed(project_root: Path | None = None, *, force: bool = F
     return created
 
 
-def ensure_installed(project_root: Path | None = None, *, force: bool = False) -> InstallResult:
+def ensure_installed(
+    project_root: Path | None = None, *, force: bool = False
+) -> InstallResult:
     cmd_path, cmd_created = ensure_command_installed(project_root, force=force)
     agents_created = ensure_agents_installed(project_root, force=force)
     return InstallResult(cmd_path, cmd_created, agents_created)

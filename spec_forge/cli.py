@@ -39,11 +39,14 @@ def _main(ctx: typer.Context) -> None:
         n = len(result.agents_created)
         extra = f" + {n} subagents" if n else ""
         typer.secho(
-            f"↪ Claude Code: /spec-forge{extra} ({result.command_path})", fg=typer.colors.BLUE
+            f"↪ Claude Code: /spec-forge{extra} ({result.command_path})",
+            fg=typer.colors.BLUE,
         )
 
 
-command_app = typer.Typer(help="Claude Code /spec-forge slash-command (add/remove).", no_args_is_help=True)
+command_app = typer.Typer(
+    help="Claude Code /spec-forge slash-command (add/remove).", no_args_is_help=True
+)
 app.add_typer(command_app, name="command")
 
 
@@ -51,7 +54,9 @@ app.add_typer(command_app, name="command")
 def _require_bundle(path: Path) -> Path:
     bundle = path / "specifications"
     if not bundle.exists():
-        typer.secho("❌ No specifications/ — run `spec-forge init` first", fg=typer.colors.RED)
+        typer.secho(
+            "❌ No specifications/ — run `spec-forge init` first", fg=typer.colors.RED
+        )
         raise typer.Exit(1)
     return bundle
 
@@ -66,7 +71,9 @@ def _build_context(bundle: Path, description: str) -> str:
     parts: list[str] = []
     agents = bundle / "ai" / "AGENTS.md"
     if agents.exists():
-        parts.append("# Project context (AGENTS.md)\n" + agents.read_text(encoding="utf-8"))
+        parts.append(
+            "# Project context (AGENTS.md)\n" + agents.read_text(encoding="utf-8")
+        )
     if description:
         parts.append("# Feature description\n" + description)
     if not parts:
@@ -101,11 +108,15 @@ def _write_artifact(out: Path, new: str, *, updating: bool, yes: bool) -> bool:
     return True
 
 
-def _build_code_context(code_ctx: str, bundle: Path, instruction: str, extra: str = "") -> str:
+def _build_code_context(
+    code_ctx: str, bundle: Path, instruction: str, extra: str = ""
+) -> str:
     parts = ["# Codebase\n" + code_ctx]
     agents = bundle / "ai" / "AGENTS.md"
     if agents.exists():
-        parts.append("# Project context (AGENTS.md)\n" + agents.read_text(encoding="utf-8"))
+        parts.append(
+            "# Project context (AGENTS.md)\n" + agents.read_text(encoding="utf-8")
+        )
     if extra:
         parts.append(extra)
     parts.append(instruction)
@@ -136,17 +147,30 @@ def _run_phase(
         typer.secho(f"✅ {out_rel} {label}: {out}", fg=typer.colors.GREEN)
 
 
+def _scaffold_notice() -> None:
+    """CLI content commands only emit a deterministic mock placeholder — say so, loudly."""
+    typer.secho(
+        "ℹ mock scaffold placeholder — run the matching `/spec-forge` subcommand "
+        "in Claude Code for real AI content.",
+        fg=typer.colors.YELLOW,
+    )
+
+
 # ---- commands ---------------------------------------------------------------
 @app.command()
 def init(
     path: Path = typer.Argument(..., help="Project directory"),
     name: str = typer.Option(None, "--name", help="Project name"),
-    stack: str = typer.Option(None, "--stack", help=f"Stack: {', '.join(sorted(PROFILES))}"),
+    stack: str = typer.Option(
+        None, "--stack", help=f"Stack: {', '.join(sorted(PROFILES))}"
+    ),
     summary: str = typer.Option("", "--summary", help="Short project description"),
     yes: bool = typer.Option(False, "--yes", "-y", help="No interactive questions"),
 ) -> None:
     """Scaffolds the specifications/ bundle into the project directory (US-1, FR-001/002/007)."""
-    name = name or (path.name if yes else typer.prompt("Project name", default=path.name))
+    name = name or (
+        path.name if yes else typer.prompt("Project name", default=path.name)
+    )
     stack = stack or ("python" if yes else typer.prompt("Stack", default="python"))
     try:
         profile = get_profile(stack)
@@ -154,12 +178,19 @@ def init(
         raise typer.BadParameter(str(exc)) from exc
 
     answers = InterviewAnswers(project_name=name, stack=stack, summary=summary)
-    ctx = {"project": answers.project_name, "summary": answers.summary, **profile.render_context()}
+    ctx = {
+        "project": answers.project_name,
+        "summary": answers.summary,
+        **profile.render_context(),
+    }
 
     try:
         written = scaffold(path, ctx)
     except BundleExistsError as exc:
-        typer.secho(f"❌ {exc} (to update artifacts, use the spec/plan/tasks phases)", fg=typer.colors.RED)
+        typer.secho(
+            f"❌ {exc} (to update artifacts, use the spec/plan/tasks phases)",
+            fg=typer.colors.RED,
+        )
         raise typer.Exit(1) from exc
 
     mark_phase(path, "init")
@@ -172,41 +203,57 @@ def init(
 @app.command()
 def spec(
     path: Path = typer.Argument(Path("."), help="Project directory"),
-    description: str = typer.Option("", "--description", "-d", help="Project/feature description"),
-    yes: bool = typer.Option(False, "--yes", "-y", help="Overwrite without confirmation"),
+    description: str = typer.Option(
+        "", "--description", "-d", help="Project/feature description"
+    ),
+    yes: bool = typer.Option(
+        False, "--yes", "-y", help="Overwrite without confirmation"
+    ),
 ) -> None:
-    """(BA) Draft of the spec.md requirements via a persona (US-2, FR-003)."""
+    """(BA) Draft spec.md requirements — scaffold placeholder; real content via /spec-forge spec (US-2, FR-003)."""
     bundle = _require_bundle(path)
     context = _build_context(bundle, description)
     _run_phase(
-        path, "spec", "business-analyst", context,
-        "product/specs/001-feature/spec.md", yes,
+        path,
+        "spec",
+        "business-analyst",
+        context,
+        "product/specs/001-feature/spec.md",
+        yes,
     )
+    _scaffold_notice()
 
 
 @app.command()
 def plan(
     path: Path = typer.Argument(Path("."), help="Project directory"),
-    yes: bool = typer.Option(False, "--yes", "-y", help="Overwrite without confirmation"),
+    yes: bool = typer.Option(
+        False, "--yes", "-y", help="Overwrite without confirmation"
+    ),
 ) -> None:
-    """(SA) Technical plan plan.md from spec.md (US-3, FR-004)."""
+    """(SA) Technical plan plan.md — scaffold placeholder; real content via /spec-forge plan (US-3, FR-004)."""
     bundle = _require_bundle(path)
     spec_text = _read_first_spec(bundle)
     if spec_text is None:
         typer.secho("❌ No spec.md — run `spec-forge spec` first", fg=typer.colors.RED)
         raise typer.Exit(1)
     context = (
-        "# Requirements (spec.md)\n" + spec_text + "\n\nWrite a technical plan (plan.md) in Markdown."
+        "# Requirements (spec.md)\n"
+        + spec_text
+        + "\n\nWrite a technical plan (plan.md) in Markdown."
     )
     _run_phase(path, "plan", "solution-architect", context, "architecture/plan.md", yes)
+    _scaffold_notice()
 
 
 @app.command()
 def tasks(
     path: Path = typer.Argument(Path("."), help="Project directory"),
-    yes: bool = typer.Option(False, "--yes", "-y", help="Overwrite without confirmation"),
+    yes: bool = typer.Option(
+        False, "--yes", "-y", help="Overwrite without confirmation"
+    ),
 ) -> None:
-    """Derive the delivery/tasks.md tasks from plan.md (US-4, FR-005)."""
+    """Derive delivery/tasks.md tasks — scaffold placeholder; real content via /spec-forge tasks (US-4, FR-005)."""
     bundle = _require_bundle(path)
     plan_file = bundle / "architecture" / "plan.md"
     if not plan_file.exists():
@@ -218,6 +265,29 @@ def tasks(
         + "\n\nDerive atomic, traceable tasks (tasks.md) in Markdown with checkboxes."
     )
     _run_phase(path, "tasks", "developer", context, "delivery/tasks.md", yes)
+    _scaffold_notice()
+
+
+@app.command()
+def design(
+    path: Path = typer.Argument(Path("."), help="Project directory"),
+    yes: bool = typer.Option(
+        False, "--yes", "-y", help="Overwrite without confirmation"
+    ),
+) -> None:
+    """(Designer, optional) UX/UI design spec — scaffold placeholder; real content via /spec-forge design."""
+    bundle = _require_bundle(path)
+    spec_text = _read_first_spec(bundle)
+    if spec_text is None:
+        typer.secho("❌ No spec.md — run `spec-forge spec` first", fg=typer.colors.RED)
+        raise typer.Exit(1)
+    context = (
+        "# Requirements (spec.md)\n"
+        + spec_text
+        + "\n\nWrite the UX/UI design spec (user flows, component states, a11y) in Markdown."
+    )
+    _run_phase(path, "design", "designer", context, "design/feature.design.md", yes)
+    _scaffold_notice()
 
 
 @app.command()
@@ -244,7 +314,8 @@ def deploy(path: Path = typer.Argument(Path("."), help="Project directory")) -> 
     created = deploy_root(path)
     mark_phase(path, "deploy")
     typer.secho(
-        f"✅ Deployed {len(created)} pointers: {', '.join(created)}", fg=typer.colors.GREEN
+        f"✅ Deployed {len(created)} pointers: {', '.join(created)}",
+        fg=typer.colors.GREEN,
     )
 
 
@@ -261,13 +332,25 @@ def export(
 
 @app.command()
 def analyze(
-    source: Path = typer.Argument(..., help="Directory of an EXISTING project for code analysis"),
-    path: Path = typer.Option(None, "--path", help="Where to write specifications/ (default = source)"),
-    slug: str = typer.Option("002-existing", "--slug", help="Folder under product/specs/"),
+    source: Path = typer.Argument(
+        ..., help="Directory of an EXISTING project for code analysis"
+    ),
+    path: Path = typer.Option(
+        None, "--path", help="Where to write specifications/ (default = source)"
+    ),
+    slug: str = typer.Option(
+        "002-existing", "--slug", help="Folder under product/specs/"
+    ),
     only: str = typer.Option("both", "--only", help="both | spec | review"),
-    max_file_bytes: int = typer.Option(100_000, "--max-file-bytes", help="Per-file limit (bytes)"),
-    max_chars: int = typer.Option(200_000, "--max-chars", help="Context limit (characters)"),
-    yes: bool = typer.Option(False, "--yes", "-y", help="Overwrite without confirmation"),
+    max_file_bytes: int = typer.Option(
+        100_000, "--max-file-bytes", help="Per-file limit (bytes)"
+    ),
+    max_chars: int = typer.Option(
+        200_000, "--max-chars", help="Context limit (characters)"
+    ),
+    yes: bool = typer.Option(
+        False, "--yes", "-y", help="Overwrite without confirmation"
+    ),
 ) -> None:
     """(Reverse) Spec + review of EXISTING code (brownfield) — deterministic scaffolding.
 
@@ -282,39 +365,59 @@ def analyze(
     target = path or source
     bundle = target / "specifications"
     try:
-        code_ctx = codescan.scan_codebase(source, max_file_bytes=max_file_bytes, max_total_chars=max_chars)
+        code_ctx = codescan.scan_codebase(
+            source, max_file_bytes=max_file_bytes, max_total_chars=max_chars
+        )
     except OSError as exc:
         typer.secho(f"❌ Code scan: {exc}", fg=typer.colors.RED)
         raise typer.Exit(1) from exc
 
     if only in ("both", "spec"):
         ctx = _build_code_context(
-            code_ctx, bundle,
+            code_ctx,
+            bundle,
             "Derive the ACTUAL product specification (spec.md) from this code, with references to files.",
         )
-        _run_phase(target, "analyze", "reverse-analyst", ctx, f"product/specs/{slug}/spec.md", yes)
+        _run_phase(
+            target,
+            "analyze",
+            "reverse-analyst",
+            ctx,
+            f"product/specs/{slug}/spec.md",
+            yes,
+        )
 
     if only in ("both", "review"):
         inferred = bundle / "product" / "specs" / slug / "spec.md"
         docs: list[str] = []
         if inferred.exists():
-            docs.append("# Inferred spec (spec.md)\n" + inferred.read_text(encoding="utf-8"))
+            docs.append(
+                "# Inferred spec (spec.md)\n" + inferred.read_text(encoding="utf-8")
+            )
         expected = _read_first_spec(bundle)
-        if expected and (not inferred.exists() or expected != inferred.read_text(encoding="utf-8")):
+        if expected and (
+            not inferred.exists() or expected != inferred.read_text(encoding="utf-8")
+        ):
             docs.append("# Expected spec (existing)\n" + expected)
         for rel in ("architecture/plan.md", "delivery/tasks.md"):
             doc = bundle / rel
             if doc.exists():
-                docs.append(f"# Existing doc ({rel})\n" + doc.read_text(encoding="utf-8"))
+                docs.append(
+                    f"# Existing doc ({rel})\n" + doc.read_text(encoding="utf-8")
+                )
         ctx = _build_code_context(
-            code_ctx, bundle,
+            code_ctx,
+            bundle,
             "Reconcile the DOCS (specifications/) against the code. Compose a review/gap document: what is "
             "missing in the docs, deficiencies and DRIFT (code changed, docs didn't); WHERE to fix (doc file + "
             "section), severity; for each discrepancy — a concrete doc-rewrite option; a verdict on whether the "
             "docs match the code. Don't touch the code, only propose doc rewrites.",
             extra="\n\n".join(docs),
         )
-        _run_phase(target, "review", "reviewer", ctx, f"product/specs/{slug}/review.md", yes)
+        _run_phase(
+            target, "review", "reviewer", ctx, f"product/specs/{slug}/review.md", yes
+        )
+    _scaffold_notice()
 
 
 @app.command()
@@ -333,26 +436,35 @@ def status(path: Path = typer.Argument(Path("."), help="Project directory")) -> 
 
 @command_app.command("install")
 def command_install(
-    project: bool = typer.Option(False, "--project", help="Into the current project instead of globally"),
-    force: bool = typer.Option(False, "--force", help="Overwrite the command and subagents"),
+    project: bool = typer.Option(
+        False, "--project", help="Into the current project instead of globally"
+    ),
+    force: bool = typer.Option(
+        False, "--force", help="Overwrite the command and subagents"
+    ),
 ) -> None:
     """Add the /spec-forge slash-command + role subagents (globally or into the project)."""
     root = Path(".") if project else None
     result = integrations.ensure_installed(root, force=force)
     typer.secho(f"✅ /spec-forge: {result.command_path}", fg=typer.colors.GREEN)
-    typer.secho(f"   subagents written: {len(result.agents_created)}", fg=typer.colors.GREEN)
+    typer.secho(
+        f"   subagents written: {len(result.agents_created)}", fg=typer.colors.GREEN
+    )
 
 
 @command_app.command("uninstall")
 def command_uninstall(
-    project: bool = typer.Option(False, "--project", help="From the current project instead of globally"),
+    project: bool = typer.Option(
+        False, "--project", help="From the current project instead of globally"
+    ),
 ) -> None:
     """Remove the /spec-forge slash-command + role subagents."""
     root = Path(".") if project else None
     result = integrations.remove(root)
     if result.command_removed or result.agents_removed:
         typer.secho(
-            f"✅ removed: command + {len(result.agents_removed)} subagents", fg=typer.colors.GREEN
+            f"✅ removed: command + {len(result.agents_removed)} subagents",
+            fg=typer.colors.GREEN,
         )
     else:
         typer.secho("= nothing was there", fg=typer.colors.YELLOW)

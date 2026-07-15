@@ -37,14 +37,18 @@
 - [x] **T-020** auto-registration of the Claude Code slash command `/spec-forge` + `command install/uninstall` (FR-014/US-10, ADR-0004)
 - [x] **T-021** `analyze` — brownfield: `codescan` (limited code reader) + `reverse-analyst`/`reviewer` personas + reverse spec + in-place review (FR-015/US-11, ADR-0005)
 - [x] **T-022** `/spec-forge` v3 — **dispatcher of exact subcommands** (spec/plan/tasks/analyze natively; init/validate/… via CLI), on the subscription (FR-016/US-12, ADR-0006)
-- [x] **T-023** installing 7 role subagents in `~/.claude/agents/` (+ `reverse-analyst`/`reviewer` for analyze) + self-upgrade + `command install --force` (FR-017)
+- [x] **T-023** installing role subagents in `~/.claude/agents/` (+ `reverse-analyst`/`reviewer` for analyze) + self-upgrade + `command install --force` (FR-017)
 - [x] **T-024** tests install/remove/dispatcher-markers/self-upgrade/enumeration
 - [x] **T-025** docs: ADR-0006 + README section
 - [x] **T-026** `reverse-analyst` + `reviewer` subagents (`ai/agents/` bundle) for native `/spec-forge analyze`
 - [x] **T-027** PDF export: emoji icons via the fallback font `NotoEmoji.ttf` (monochrome, OFL) + `set_fallback_fonts` (ADR-0003)
 - [x] **T-029** `/spec-forge fill` — native wizard for step-by-step filling of all `specifications/` files
   (auto-draft → confirmation, live todo checklist, context accumulation across steps); wrapper v6 + todo tools (FR-018/US-13)
+- [x] **T-030** command-surface declutter: CLI content commands print a "mock scaffold placeholder" notice
+  (point users to `/spec-forge`); wire the `designer` persona via a new `design` command + dispatcher route;
+  remove the redundant, unwired `code-reviewer` agent (6 subagents); clarify `fill` vs single phases and the
+  auto-install/`command install` split; wrapper v7
 
 ---
-**ALL tasks (T-001…T-027, T-029 + phases) are done.** Commands: `init · spec · plan · tasks · analyze · validate · deploy · status · export · command`; `fill` — native wizard in Claude Code.
-`/spec-forge <subcommand>` — a dispatcher of exact subcommands (content natively on the subscription, mechanical via CLI). 49 tests, ruff clean.
+**ALL tasks (T-001…T-027, T-029, T-030 + phases) are done.** Commands: `init · spec · plan · tasks · design · analyze · validate · deploy · status · export · command`; `fill` — native wizard in Claude Code.
+`/spec-forge <subcommand>` — a dispatcher of exact subcommands (content natively on the subscription, mechanical via CLI). 50 tests, ruff clean.

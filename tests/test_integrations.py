@@ -19,7 +19,7 @@ def test_install_writes_command_and_agents(tmp_path):
     assert result.command_created
     assert _cmd(tmp_path).exists()
     srcs = bundled_agent_files()
-    assert len(result.agents_created) == len(srcs) == 7
+    assert len(result.agents_created) == len(srcs) == 6
     for src in srcs:
         dst = _agents(tmp_path) / src.name
         assert dst.exists()
@@ -77,7 +77,7 @@ def test_remove_removes_command_and_agents(tmp_path):
     other.write_text("keep me", encoding="utf-8")
     result = remove(tmp_path)
     assert result.command_removed
-    assert len(result.agents_removed) == 7
+    assert len(result.agents_removed) == 6
     assert not _cmd(tmp_path).exists()
     assert other.exists()  # do not touch a third-party agent
     result2 = remove(tmp_path)
@@ -92,7 +92,6 @@ def test_bundled_agents_enumeration():
         "solution-architect.md",
         "designer.md",
         "developer.md",
-        "code-reviewer.md",
         "reverse-analyst.md",
         "reviewer.md",
     }

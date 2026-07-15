@@ -35,3 +35,11 @@ def test_spec_writes_draft(tmp_path):
     result = runner.invoke(app, ["spec", str(target)])
     assert result.exit_code == 0, result.output
     assert (target / "specifications" / "product" / "specs" / "001-feature" / "spec.md").exists()
+
+
+def test_design_writes_draft(tmp_path):
+    target = tmp_path / "proj"
+    runner.invoke(app, ["init", str(target), "--stack", "python", "--yes"])
+    result = runner.invoke(app, ["design", str(target)])
+    assert result.exit_code == 0, result.output
+    assert (target / "specifications" / "design" / "feature.design.md").exists()

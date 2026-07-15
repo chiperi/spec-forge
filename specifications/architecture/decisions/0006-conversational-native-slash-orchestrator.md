@@ -19,7 +19,7 @@ functionality as the CLI**, generating content directly in Claude Code with role
   > exactly the implemented functionality.
 - Content — everything on the **Claude Max subscription** (natively in Claude Code); the mechanical subcommands — via
   the already-installed CLI.
-- Install **7 role subagents** in `~/.claude/agents/` (so that delegation works in any
+- Install **6 role subagents** in `~/.claude/agents/` (so that delegation works in any
   project); the source is `spec_forge/templates/bundle/ai/agents/*.md`. For `analyze`, `reverse-analyst`
   (the actual spec) and `reviewer` (gap/review) were added, mirroring the personas of the CLI's `analyze` mode (ADR-0005).
 - **Self-upgrade** of the command by a version marker (`<!-- spec-forge-command vN -->`);

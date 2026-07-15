@@ -75,7 +75,7 @@ def test_command_install_uninstall_cli(tmp_path, monkeypatch):
     assert wrapper.exists()
     assert (agents / "business-analyst.md").exists()
     assert (agents / "reverse-analyst.md").exists()
-    assert len(list(agents.glob("*.md"))) == 7
+    assert len(list(agents.glob("*.md"))) == 6
     r2 = runner.invoke(app, ["command", "uninstall", "--project"])
     assert r2.exit_code == 0
     assert not wrapper.exists()
