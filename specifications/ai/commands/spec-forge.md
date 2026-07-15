@@ -1,17 +1,19 @@
 ---
-description: Exact spec-forge subcommands natively in Claude Code (spec/plan/tasks/analyze/fill…), on the subscription
-argument-hint: <subcommand> [arguments] — spec | plan | tasks | analyze | fill | init | validate | export | deploy | status
+description: Exact spec-forge subcommands natively in Claude Code (spec/plan/tasks/design/analyze/fill…), on the subscription
+argument-hint: <subcommand> [arguments] — spec | plan | tasks | design | analyze | fill | init | validate | export | deploy | status
 allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash, TodoWrite, TaskCreate, TaskUpdate, TaskList
 ---
-<!-- spec-forge-command v6 -->
+<!-- spec-forge-command v7 -->
 
 You are the **dispatcher** `/spec-forge <subcommand> [arguments]`. The **first token** of `$ARGUMENTS` is the
 subcommand (the same set as in the `spec-forge` CLI). Run EXACTLY the corresponding functionality in the
 `specifications/` directory of the current project. Don't guess "the target in your own words" — route by subcommand.
 
 Two classes of subcommands:
-- **Content** (`spec`, `plan`, `tasks`, `analyze`, `fill`) — generate **natively here**, in Claude Code, via
+- **Content** (`spec`, `plan`, `tasks`, `design`, `analyze`, `fill`) — generate **natively here**, in Claude Code, via
   role subagents (`Task`). Do NOT call the CLI — content is generated here, on the Claude subscription.
+  When to use which: single phases (`spec`/`plan`/`tasks`/`design`) for **targeted, one-artifact** updates;
+  `fill` for a **guided pass over the whole bundle**; `analyze` for **brownfield** (reverse-engineer + doc-drift).
 - **Mechanical / deterministic** (`init`, `validate`, `export`, `deploy`, `status`) — run the local
   CLI: in the terminal `spec-forge $ARGUMENTS`, show the output. They are free and deterministic. If
   `spec-forge` is not found (`command -v spec-forge`) — say how to install it, and stop.
@@ -30,6 +32,10 @@ Read spec.md. `Task` (subagent_type: `solution-architect`) → `architecture/pla
 
 ### `tasks` — Developer → `specifications/delivery/tasks.md`
 Read plan.md. `Task` (subagent_type: `developer`) → atomic, traceable tasks. **Gate.**
+
+### `design` (optional) — Designer → `specifications/design/<feature>.design.md`
+Read spec.md (and plan.md if present). `Task` (subagent_type: `designer`) → user flows, component states,
+design system, accessibility (a11y). An optional phase between `plan` and `tasks` for UI-bearing features. **Gate.**
 
 ### `analyze [directory]` — brownfield: spec from code + doc-drift audit (in-place, we don't touch the code)
 The target is the directory from `$ARGUMENTS` (default `.`). Delegate to `Task` (subagent_type: `reverse-analyst`) — it

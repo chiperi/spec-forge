@@ -9,7 +9,7 @@ Designer / Developer + reverse-analyst / reviewer) fill the *content* — **nati
 your subscription**. No paid backend: the standalone CLI is fully offline and free; the
 real drafting happens through the `/spec-forge` slash command.
 
-> `Python 3.12+` · `Typer` · `uv` · `Jinja2` · `pydantic` · `fpdf2` · `pytest` + `Ruff` · 49 passing tests
+> `Python 3.12+` · `Typer` · `uv` · `Jinja2` · `pydantic` · `fpdf2` · `pytest` + `Ruff` · 50 passing tests
 
 ---
 
@@ -107,7 +107,7 @@ Each artifact has an owner:
 |---|---|---|
 | `business-analyst` | `/spec-forge spec` | `product/specs/001-feature/spec.md` — requirements in **EARS / Given-When-Then**, testable user stories (P1 = MVP), **measurable** success criteria (`SC-…`), glossary |
 | `solution-architect` | `/spec-forge plan` | `architecture/plan.md` + **ADRs** in `architecture/decisions/` + contracts `contracts/openapi.yaml` (+ `asyncapi.yaml` if needed) + NFRs in numbers |
-| `designer` | *(optional)* | `design/<feature>.design.md` — user flows, component states, a11y |
+| `designer` | `/spec-forge design` *(optional)* | `design/<feature>.design.md` — user flows, component states, a11y |
 | `developer` | `/spec-forge tasks` | `delivery/tasks.md` — atomic, traceable tasks with checkboxes |
 | `reverse-analyst` | `/spec-forge analyze` | `product/specs/002-existing/spec.md` — the **actual** spec of existing code, with file citations |
 | `reviewer` | `/spec-forge analyze` | `product/specs/002-existing/review.md` — **docs-vs-code audit**: gaps, drift, and concrete rewrite proposals |
@@ -187,7 +187,7 @@ Remove **both** together:
 uv tool install git+https://github.com/chiperi/spec-forge.git
 ```
 
-The `/spec-forge` wrapper and its 7 subagents are then auto-registered on first run — see
+The `/spec-forge` wrapper and its 6 subagents are then auto-registered on first run — see
 [Claude Code integration](#claude-code-integration--the-spec-forge-dispatcher).
 </details>
 
@@ -220,7 +220,7 @@ scaffolding.
 | `deploy <dir>` | Write root pointers for tool discovery | — | bundle exists |
 | `export <dir>` | Single timestamped PDF of the whole bundle | `--out` (`exports`) | bundle exists |
 | `status <dir>` | Show lifecycle progress | — | — |
-| `command install` | (Re)install `/spec-forge` + 7 subagents | `--project` · `--force` | — |
+| `command install` | (Re)install `/spec-forge` + 6 subagents | `--project` · `--force` | — |
 | `command uninstall` | Remove `/spec-forge` + subagents | `--project` | — |
 
 `--yes/-y` skips the re-spec confirmation prompt (for CI). See [Re-spec](#re-spec--safe-updates).
@@ -262,10 +262,10 @@ spec-forge status ./my-app
 
 ## Claude Code integration — the `/spec-forge` dispatcher
 
-On first CLI run (idempotent), spec-forge registers a Claude Code slash command **and 7 role subagents**
+On first CLI run (idempotent), spec-forge registers a Claude Code slash command **and 6 role subagents**
 under `~/.claude/`:
 
-`business-analyst` · `solution-architect` · `developer` · `designer` · `code-reviewer` ·
+`business-analyst` · `solution-architect` · `designer` · `developer` ·
 `reverse-analyst` · `reviewer`.
 
 `/spec-forge` is a **dispatcher over the exact CLI subcommands** — the first token routes to one of two
@@ -274,14 +274,15 @@ classes:
 ```mermaid
 flowchart TD
     U["/spec-forge subcommand"] --> R{first token}
-    R -->|spec · plan · tasks · analyze · fill| CN["Content<br/>native subagents via Task<br/>on your subscription"]
+    R -->|spec · plan · tasks · design · analyze · fill| CN["Content<br/>native subagents via Task<br/>on your subscription"]
     R -->|init · validate · export · deploy · status| ME["Mechanical<br/>local CLI<br/>deterministic · free"]
     CN --> G["🚦 human gate after each content phase"]
     ME --> O["show CLI output"]
 ```
 
-- **Content** subcommands (`spec`, `plan`, `tasks`, `analyze`, `fill`) are generated **natively in Claude
-  Code** by delegating to a role subagent — no CLI call, on your subscription.
+- **Content** subcommands (`spec`, `plan`, `tasks`, `design`, `analyze`, `fill`) are generated **natively in
+  Claude Code** by delegating to a role subagent — no CLI call, on your subscription. Use single phases for
+  **targeted** one-artifact updates, `fill` for a **guided pass over the whole bundle**, `analyze` for **brownfield**.
 - **Mechanical** subcommands (`init`, `validate`, `export`, `deploy`, `status`) shell out to the local
   `spec-forge` CLI and show its output.
 
@@ -290,16 +291,18 @@ flowchart TD
 | `/spec-forge spec [desc]` | **native** → `business-analyst` → `product/specs/001-feature/spec.md` |
 | `/spec-forge plan` | **native** → `solution-architect` → `plan.md` + ADRs + contracts |
 | `/spec-forge tasks` | **native** → `developer` → `delivery/tasks.md` |
+| `/spec-forge design` | **native** → `designer` → `design/<feature>.design.md` *(optional)* |
 | `/spec-forge analyze [dir]` | **native** → `reverse-analyst` + `reviewer` → `002-existing/` |
 | `/spec-forge fill` | **native wizard** — step through every `specifications/` file (auto-draft → confirm) with a live to-do checklist |
 | `/spec-forge init · validate · export · deploy · status` | runs the local **CLI** (deterministic, free) |
 
 **Housekeeping**
 
-- Install / refresh: `spec-forge command install [--project] [--force]` · remove: `spec-forge command uninstall`.
-- The command **self-upgrades** by a version marker (`<!-- spec-forge-command vN -->`) on the next CLI
-  run. Subagent files are **create-if-missing** — use `command install --force` to refresh them after an
-  upgrade.
+- **Installation is automatic** on the first CLI run, and the command **self-upgrades** by a version marker
+  (`<!-- spec-forge-command vN -->`) on the next run — you rarely call `command install` yourself. Subagent
+  files are **create-if-missing**, so use `command install [--project] --force` only to **force-refresh** the
+  command + subagents after an upgrade. Remove: `spec-forge command uninstall`. (`install.sh` is just the
+  one-liner that installs the CLI and runs this for you.)
 - Opt out of auto-registration: `export SPEC_FORGE_NO_SLASH=1`.
 - Reload Claude Code after install to see `/spec-forge`.
 
@@ -467,7 +470,7 @@ flowchart TB
     cli --> integrations
     scaffolder --> tpl[("templates/bundle/")]
     backends --> mock["MockBackend<br/>deterministic · offline"]
-    integrations --> claude["~/.claude/<br/>command + 7 subagents"]
+    integrations --> claude["~/.claude/<br/>command + 6 subagents"]
 ```
 
 | Module | Responsibility |

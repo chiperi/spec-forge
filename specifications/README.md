@@ -19,7 +19,7 @@ specifications/
 │   ├── settings.json             permissions · model · hooks (in git)
 │   ├── settings.local.json.example  personal (gitignored)
 │   ├── rules/                    user-rules.md · copilot-instructions.md
-│   ├── agents/                   persona subagents (BA/SA/designer/developer/code-reviewer)
+│   ├── agents/                   persona subagents (BA/SA/designer/developer + reverse-analyst/reviewer)
 │   ├── commands/                 custom slash commands
 │   ├── skills/                   skills (SKILL.md by trigger)
 │   ├── hooks/                    event scripts (guardrails; run by the harness)
