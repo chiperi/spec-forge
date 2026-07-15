@@ -1,30 +1,30 @@
-# ADR-0001: App-first гібрид, modular monolith з plugin-seams
+# ADR-0001: App-first hybrid, modular monolith with plugin seams
 
 **Status:** accepted
 **Date:** 2026-07-09
-**Deciders:** SA (+ людина)
+**Deciders:** SA (+ human)
 
 ## Context
-Потрібен інструмент, що генерує якісну спеку для **будь-якого** проєкту. Розвилки:
-чистий додаток / чистий субагент / гібрид; моноліт / мікросервіси; хардкод стеку / плагіни.
+We need a tool that generates a quality spec for **any** project. The forks:
+pure app / pure subagent / hybrid; monolith / microservices; hardcoded stack / plugins.
 
 ## Decision
-- **App-first гібрид:** детермінований CLI-двигун + AI-субагенти для наповнення змістом.
-- **Modular monolith:** один процес, модулі з контрактними межами.
-- **Plugin seams:** `AIBackend` і `StackProfile` — інтерфейси; MVP-реалізації — `MockBackend`
-  (реальне наповнення — нативні субагенти Claude Code) та профілі python/node/go.
+- **App-first hybrid:** a deterministic CLI engine + AI subagents for content.
+- **Modular monolith:** a single process, modules with contractual boundaries.
+- **Plugin seams:** `AIBackend` and `StackProfile` are interfaces; the MVP implementations are `MockBackend`
+  (real content — native Claude Code subagents) and the python/node/go profiles.
 
 ## Consequences
-**Позитивні**
-- Детермінізм структури, тестованість, дешевизна, зрозумілість.
-- Новий стек/бекенд додається без змін ядра.
-- Інтелект підключається точково — де він реально платить.
+**Positive**
+- Determinism of structure, testability, low cost, clarity.
+- A new stack/backend is added without core changes.
+- Intelligence is plugged in surgically — where it actually pays off.
 
-**Негативні / компроміси**
-- Гібрид = дві парадигми (код + промпти) — треба тримати межу між ними чистою.
-- LLM-варіативність у фазах наповнення (мітигуємо валідаторами + людським гейтом).
+**Negative / trade-offs**
+- A hybrid = two paradigms (code + prompts) — the boundary between them must be kept clean.
+- LLM variability in the content phases (we mitigate it with validators + a human gate).
 
 ## Alternatives considered
-- **Чистий субагент** — відкинуто: варіативність, потреба LLM на кожен крок, важко гарантувати вихід.
-- **Чистий додаток (без AI)** — відкинуто: не вміє наповнювати зміст (вимоги, ADR, trade-offs).
-- **Мікросервіси** — відкинуто: локальний CLI, розподіл зайвий; модулів-seams достатньо.
+- **Pure subagent** — rejected: variability, the need for an LLM at every step, hard to guarantee the output.
+- **Pure app (no AI)** — rejected: cannot produce content (requirements, ADR, trade-offs).
+- **Microservices** — rejected: a local CLI, distribution is unnecessary; seam modules are enough.

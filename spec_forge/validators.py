@@ -1,7 +1,7 @@
-"""Quality gates на bundle специфікації (FR-006).
+"""Quality gates on the specification bundle (FR-006).
 
-Детерміновані перевірки (без AI): структурна повнота, відсутність відкритих
-[NEEDS CLARIFICATION], наявність вимірюваних success criteria.
+Deterministic checks (no AI): structural completeness, absence of open
+[NEEDS CLARIFICATION], presence of measurable success criteria.
 """
 
 from __future__ import annotations
@@ -12,18 +12,18 @@ from pathlib import Path
 
 CLARIFICATION_MARKER = "[NEEDS CLARIFICATION"
 
-# Справжній відкритий маркер стоїть у прозі. Згадки маркера як *терміна* пишуть
-# інлайн-кодом (`[NEEDS CLARIFICATION]`) або у code-fence — їх не рахуємо, інакше
-# спека, що описує сам маркер, хибно «валить» власний гейт.
+# A genuine open marker sits in prose. Mentions of the marker as a *term* are written
+# as inline code (`[NEEDS CLARIFICATION]`) or inside a code-fence — those are not counted,
+# otherwise a spec that describes the marker itself would falsely fail its own gate.
 _CODE_FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 _INLINE_CODE_RE = re.compile(r"`[^`]*`")
 
 
 def _strip_code(text: str) -> str:
-    """Прибирає code-fence і інлайн-код → лишаються тільки «прозові» маркери."""
+    """Strips code-fences and inline code → only "prose" markers remain."""
     return _INLINE_CODE_RE.sub(" ", _CODE_FENCE_RE.sub(" ", text))
 
-# Файли, які має гарантувати `init` + фази (мінімальний bundle тула).
+# Files that `init` + phases must guarantee (the tool's minimal bundle).
 REQUIRED_FILES = ["ai/AGENTS.md", "architecture/plan.md"]
 
 
@@ -40,9 +40,9 @@ def _spec_files(bundle: Path) -> list[Path]:
 
 
 def check_structure(bundle: Path) -> ValidationResult:
-    gaps = [f"відсутній {p}" for p in REQUIRED_FILES if not (bundle / p).exists()]
+    gaps = [f"missing {p}" for p in REQUIRED_FILES if not (bundle / p).exists()]
     if not _spec_files(bundle):
-        gaps.append("відсутній product/specs/**/spec.md")
+        gaps.append("missing product/specs/**/spec.md")
     return ValidationResult("structure", not gaps, gaps)
 
 
@@ -51,7 +51,7 @@ def check_clarifications(bundle: Path) -> ValidationResult:
     for f in _spec_files(bundle):
         n = _strip_code(f.read_text(encoding="utf-8")).count(CLARIFICATION_MARKER)
         if n:
-            gaps.append(f"{f.relative_to(bundle)}: {n} незакритих [NEEDS CLARIFICATION]")
+            gaps.append(f"{f.relative_to(bundle)}: {n} unresolved [NEEDS CLARIFICATION]")
     return ValidationResult("clarifications", not gaps, gaps)
 
 
@@ -60,7 +60,7 @@ def check_measurable(bundle: Path) -> ValidationResult:
     for f in _spec_files(bundle):
         text = f.read_text(encoding="utf-8")
         if "Success Criteria" not in text or "SC-" not in text:
-            gaps.append(f"{f.relative_to(bundle)}: немає вимірюваних Success Criteria (SC-…)")
+            gaps.append(f"{f.relative_to(bundle)}: no measurable Success Criteria (SC-…)")
     return ValidationResult("measurable-success", not gaps, gaps)
 
 

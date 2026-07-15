@@ -1,3 +1,3 @@
-# Windsurf rules (приклад)
+# Windsurf rules (example)
 
-<правила проєкту для Windsurf>
+<project rules for Windsurf>

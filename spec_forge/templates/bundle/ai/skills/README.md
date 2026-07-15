@@ -1,5 +1,5 @@
 # skills/
 
-Багаторазові навички (skills) — процедури, які агент застосовує за тригером.
-Формат: тека `<skill-name>/SKILL.md` з frontmatter `name` + `description`
-(description вирішує, коли навичка активується).
+Reusable skills — procedures the agent applies on a trigger.
+Format: a `<skill-name>/SKILL.md` directory with `name` + `description` frontmatter
+(the description decides when the skill activates).

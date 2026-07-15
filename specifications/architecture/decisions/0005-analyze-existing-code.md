@@ -1,31 +1,31 @@
-# ADR-0005: `analyze` — reverse-спека + рев'ю наявного коду
+# ADR-0005: `analyze` — reverse spec + review of existing code
 
 **Status:** accepted
 **Date:** 2026-07-09
 **Deciders:** Developer (+ SA)
 
 ## Context
-Greenfield-режим драфтить з опису (`-d`) + `AGENTS.md`, **не читаючи код**. Потрібен brownfield:
-за наявним кодом отримати (1) reverse-спеку (що робить) і (2) рев'ю (де/що виправити, чи все як треба).
+Greenfield mode drafts from a description (`-d`) + `AGENTS.md`, **without reading the code**. We need brownfield:
+from existing code, produce (1) a reverse spec (what it does) and (2) a review (where/what to fix, whether everything is as it should be).
 
 ## Decision
-- Одна команда **`analyze <source>`**: один скан коду → два документи (`--only both|spec|review`).
-- **In-place:** пише у `<source>/specifications/product/specs/002-existing/{spec,review}.md`
-  (`--path` / `--slug` — override). **Код не чіпає.**
-- **`init` не потрібен** (brownfield): теки створює `_write_artifact`.
-- Читач коду **`codescan.py`** — курований ignore-set (без `.gitignore`/`pathspec`): детермінований,
-  офлайн, тестований; ліміти `--max-file-bytes` / `--max-chars`.
-- Дві нові персони: **`reverse-analyst`**, **`reviewer`**.
-- Фази `analyze` / `review` — через `mark_phase`/`phase_done` (re-spec diff/confirm), але **НЕ** у `state.PHASES`
-  (щоб не міняти `status`/`validate`).
+- A single command **`analyze <source>`**: one code scan → two documents (`--only both|spec|review`).
+- **In-place:** writes to `<source>/specifications/product/specs/002-existing/{spec,review}.md`
+  (`--path` / `--slug` — override). **Does not touch the code.**
+- **`init` is not needed** (brownfield): the directories are created by `_write_artifact`.
+- The code reader **`codescan.py`** — a curated ignore-set (without `.gitignore`/`pathspec`): deterministic,
+  offline, tested; limits `--max-file-bytes` / `--max-chars`.
+- Two new personas: **`reverse-analyst`**, **`reviewer`**.
+- The `analyze` / `review` phases — via `mark_phase`/`phase_done` (re-spec diff/confirm), but **NOT** in `state.PHASES`
+  (so as not to change `status`/`validate`).
 
 ## Consequences
-**Позитивні**
-- Reuse `_run_phase` / `_write_artifact` / `_read_first_spec`; жодної нової залежності.
-- Reverse-спека — first-class: її бачать `validate` / `export` / `plan`.
+**Positive**
+- Reuse of `_run_phase` / `_write_artifact` / `_read_first_spec`; no new dependency.
+- The reverse spec is first-class: it is seen by `validate` / `export` / `plan`.
 
-**Негативні / компроміси**
-- Реальний зміст — нативно через `/spec-forge analyze` (Claude Code); CLI `analyze` — ехо
-  (тести/офлайн-каркас).
-- `.gitignore` не парситься — відкладено (майбутній `--gitignore` + `pathspec`).
-- Великі репо обрізаються `--max-chars` (обмеження контексту субагента).
+**Negative / trade-offs**
+- The real content — natively via `/spec-forge analyze` (Claude Code); the CLI `analyze` is an echo
+  (test/offline scaffold).
+- `.gitignore` is not parsed — deferred (a future `--gitignore` + `pathspec`).
+- Large repos are truncated by `--max-chars` (the subagent's context limit).

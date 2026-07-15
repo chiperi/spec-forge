@@ -1,8 +1,8 @@
-"""Lifecycle-стан проєкту (.spec-forge/state.json) + порядок фаз (FR-009).
+"""Project lifecycle state (.spec-forge/state.json) + phase order (FR-009).
 
-Стан лежить у корені цільового проєкту (поза bundle), тож не впливає на детермінізм
-scaffold-у. Використовується для: показу прогресу (`status`) і режиму re-spec (FR-012):
-першу чернетку фаза пише вільно; повторний запуск = оновлення → diff + підтвердження.
+The state lives in the root of the target project (outside the bundle), so it does not affect
+scaffold determinism. It is used to: show progress (`status`) and support re-spec mode (FR-012):
+a phase writes the first draft freely; a repeat run = update → diff + confirmation.
 """
 
 from __future__ import annotations

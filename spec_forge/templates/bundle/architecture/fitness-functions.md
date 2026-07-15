@@ -1,11 +1,11 @@
 # Architecture Fitness Functions
 
-Виконувані перевірки архітектурних характеристик у CI (Neal Ford).
-Governance = код у пайплайні, а не ручне ревʼю.
+Executable checks of architectural characteristics in CI (Neal Ford).
+Governance = code in the pipeline, not manual review.
 
-| ID | Характеристика | Перевірка | Тип | Де |
+| ID | Characteristic | Check | Type | Where |
 |----|----------------|-----------|-----|----|
-| FF-001 | Модульність | модуль A не імпортує internal модуля B | atomic/triggered | CI (arch test) |
-| FF-002 | Performance | p95 latency < NFR-001 | holistic/continual | load test у пайплайні |
-| FF-003 | Dependencies | немає заборонених/циклічних залежностей | atomic | CI |
-| FF-004 | Security | немає critical vuln у залежностях | atomic | CI (SCA) |
+| FF-001 | Modularity | module A does not import module B's internals | atomic/triggered | CI (arch test) |
+| FF-002 | Performance | p95 latency < NFR-001 | holistic/continual | load test in the pipeline |
+| FF-003 | Dependencies | no forbidden/circular dependencies | atomic | CI |
+| FF-004 | Security | no critical vuln in dependencies | atomic | CI (SCA) |

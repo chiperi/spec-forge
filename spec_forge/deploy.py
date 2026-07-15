@@ -1,7 +1,7 @@
-"""Розгортання root-pointer-ів для tool-discovery (FR-008).
+"""Deploying root pointers for tool-discovery (FR-008).
 
-Створює symlinks у корені проєкту, що вказують у specifications/ (єдине джерело).
-Лінкує лише те, що реально існує в bundle — тож працює і на мінімальному bundle.
+Creates symlinks in the project root that point into specifications/ (the single source).
+Links only what actually exists in the bundle — so it works even on a minimal bundle.
 """
 
 from __future__ import annotations
@@ -10,7 +10,7 @@ import os
 import shutil
 from pathlib import Path
 
-# (ім'я лінка в корені, ціль відносно кореня)
+# (link name in the root, target relative to the root)
 ROOT_LINKS: list[tuple[str, str]] = [
     ("AGENTS.md", "specifications/ai/AGENTS.md"),
     ("CLAUDE.md", "specifications/ai/AGENTS.md"),
@@ -20,14 +20,14 @@ ROOT_LINKS: list[tuple[str, str]] = [
     (".env.example", "specifications/platform/env.example"),
 ]
 
-# git читає ці файли з O_NOFOLLOW (захист від symlink-атак) і НЕ йде за симлінком,
-# тож у корені вони МАЮТЬ бути реальними файлами — інакше правила ігноруються
-# ("Too many levels of symbolic links"). Тому копіюємо вміст, а не лінкуємо.
+# git reads these files with O_NOFOLLOW (protection against symlink attacks) and does NOT follow the symlink,
+# so in the root they MUST be real files — otherwise the rules are ignored
+# ("Too many levels of symbolic links"). That's why we copy the content rather than link it.
 ROOT_COPIES: list[tuple[str, str]] = [
     (".gitattributes", "specifications/platform/gitattributes"),
 ]
 
-# (ім'я лінка, ціль відносно теки лінка)
+# (link name, target relative to the link's directory)
 NESTED_LINKS: list[tuple[str, str]] = [
     (".claude/agents", "../specifications/ai/agents"),
     (".claude/commands", "../specifications/ai/commands"),
@@ -43,12 +43,12 @@ def _link(link: Path, target: str) -> None:
     if link.is_symlink():
         link.unlink()
     elif link.exists():
-        return  # не чіпаємо реальний файл/теку
+        return  # don't touch a real file/directory
     link.symlink_to(target)
 
 
 def _copy(dst: Path, src: Path) -> None:
-    """Матеріалізує реальний файл (для git-чутливих цілей). Оновлює за зміни джерела."""
+    """Materializes a real file (for git-sensitive targets). Updates when the source changes."""
     if dst.is_symlink():
         dst.unlink()
     new = src.read_bytes()
@@ -58,9 +58,9 @@ def _copy(dst: Path, src: Path) -> None:
 
 
 def deploy_root(root: Path) -> list[str]:
-    """Створює root-pointer-и для наявних цілей. Повертає імена створених.
+    """Creates root pointers for existing targets. Returns the names of the created ones.
 
-    Здебільшого symlinks; git-чутливі файли (`ROOT_COPIES`) — реальні копії.
+    Mostly symlinks; git-sensitive files (`ROOT_COPIES`) are real copies.
     """
     created: list[str] = []
     for name, target in ROOT_LINKS:
@@ -74,7 +74,7 @@ def deploy_root(root: Path) -> list[str]:
             created.append(name)
     for name, target in NESTED_LINKS:
         link = root / name
-        # ціль відносна до теки лінка; нормалізуємо текстово (тека лінка ще може не існувати)
+        # target is relative to the link's directory; normalize textually (the link's directory may not exist yet)
         real = Path(os.path.normpath(link.parent / target))
         if real.exists():
             link.parent.mkdir(parents=True, exist_ok=True)

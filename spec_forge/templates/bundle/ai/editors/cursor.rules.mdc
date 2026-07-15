@@ -1,7 +1,7 @@
 ---
-description: Приклад правила Cursor
+description: Example Cursor rule
 globs: ["**/*"]
 alwaysApply: true
 ---
 
-<правила для Cursor>
+<rules for Cursor>

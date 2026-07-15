@@ -1,4 +1,4 @@
-# ADR-0001: <короткий заголовок рішення>
+# ADR-0001: <short decision title>
 
 **Status:** proposed
 **Date:** YYYY-MM-DD
@@ -7,4 +7,4 @@
 ## Decision
 ## Consequences
 
-> Формат Nygard. Детальний шаблон — у `spec-templates/decisions/adr-template.md`.
+> Nygard format. Detailed template — in `spec-templates/decisions/adr-template.md`.

@@ -1,7 +1,7 @@
 # Tasks: example-service
 
-## Wave 1 — Каркас сервісу
-- [ ] T-001 скелет + health-check
-- [ ] T-002 контракти (openapi/asyncapi) + валідація
-## Wave 2 — Логіка
+## Wave 1 — Service skeleton
+- [ ] T-001 skeleton + health-check
+- [ ] T-002 contracts (openapi/asyncapi) + validation
+## Wave 2 — Logic
 - [ ] T-003 ...

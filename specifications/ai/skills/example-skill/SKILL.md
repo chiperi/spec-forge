@@ -1,9 +1,9 @@
 ---
 name: example-skill
-description: Коли застосовувати цю навичку (тригери). Тримай конкретним і дієслівним.
+description: When to apply this skill (triggers). Keep it specific and verb-driven.
 ---
 
 # Example Skill
 
-Кроки/процедура, яку виконує агент, коли навичка активна.
-За потреби — посилання на допоміжні файли в цій же теці.
+The steps/procedure the agent performs when the skill is active.
+If needed — links to helper files in this same directory.

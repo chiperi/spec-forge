@@ -1,6 +1,6 @@
 # hooks/
 
-Скрипти на події (реєструються в `settings.json` → `hooks`).
-Події: PreToolUse · PostToolUse · Stop · UserPromptSubmit · SessionStart тощо.
-Виконує їх ГАРНЕС (не модель) — тому підходять для жорстких guardrails:
-формат/лінт після правок, заборони, нотифікації.
+Event-driven scripts (registered in `settings.json` → `hooks`).
+Events: PreToolUse · PostToolUse · Stop · UserPromptSubmit · SessionStart, etc.
+They are run by the HARNESS (not the model) — so they suit hard guardrails:
+format/lint after edits, prohibitions, notifications.

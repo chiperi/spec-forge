@@ -1,7 +1,7 @@
 [project]
 name = "spec-forge"
 version = "0.1.0"
-description = "Генератор якісних специфікацій для будь-якого проєкту (spec-driven)."
+description = "A generator of high-quality specifications for any project (spec-driven)."
 requires-python = ">=3.12"
 dependencies = [
     "typer>=0.12",

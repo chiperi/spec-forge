@@ -1,9 +1,9 @@
 # Service Plan: example-service
 
-## Стек · внутрішня архітектура
-## Контракти
-- OpenAPI (sync) · AsyncAPI (events) — джерело правди меж.
+## Stack · internal architecture
+## Contracts
+- OpenAPI (sync) · AsyncAPI (events) — the source of truth for boundaries.
 ## Distributed concerns
-- Ідемпотентність · retries/timeouts · saga/компенсації · distributed tracing (trace-id) · circuit breaker.
+- Idempotency · retries/timeouts · saga/compensations · distributed tracing (trace-id) · circuit breaker.
 ## Failure modes & degradation
-<що ламається, як деградуємо, як відновлюємось>
+<what breaks, how we degrade, how we recover>

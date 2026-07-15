@@ -1,5 +1,5 @@
 # CONVENTIONS.md
 
-> Для Aider (та як загальний довідник конвенцій).
+> For Aider (and as a general conventions reference).
 
-<стиль · патерни · домовленості>
+<style · patterns · conventions>

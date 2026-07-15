@@ -43,17 +43,17 @@ def test_respec_diff_confirm(tmp_path):
     p = str(tmp_path / "proj")
     spec_file = next((tmp_path / "proj" / "specifications" / "product" / "specs").rglob("spec.md"))
 
-    # перша чернетка — вільний запис (фаза ще не пройдена)
+    # first draft — free write (the phase has not been passed yet)
     assert runner.invoke(app, ["spec", p, "-d", "v1"]).exit_code == 0
     assert "v1" in spec_file.read_text(encoding="utf-8")
 
-    # повторний запуск (re-spec) з відмовою → файл не змінено
+    # re-run (re-spec) with a decline → file unchanged
     r2 = runner.invoke(app, ["spec", p, "-d", "v2"], input="n\n")
     assert r2.exit_code == 0
     assert "v1" in spec_file.read_text(encoding="utf-8")
     assert "v2" not in spec_file.read_text(encoding="utf-8")
 
-    # повторний запуск з --yes → перезаписано
+    # re-run with --yes → overwritten
     assert runner.invoke(app, ["spec", p, "-d", "v3", "--yes"]).exit_code == 0
     assert "v3" in spec_file.read_text(encoding="utf-8")
 
@@ -98,5 +98,5 @@ def test_deploy_creates_root_and_nested_symlinks(tmp_path):
     assert (root / "AGENTS.md").is_symlink()
     assert (root / ".claude" / "agents").is_symlink()
     assert (root / ".github" / "workflows").is_symlink()
-    # symlink резолвиться в specifications/
+    # symlink resolves into specifications/
     assert (root / "AGENTS.md").resolve() == (root / "specifications" / "ai" / "AGENTS.md").resolve()

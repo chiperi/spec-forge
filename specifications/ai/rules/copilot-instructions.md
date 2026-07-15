@@ -1,5 +1,5 @@
 # GitHub Copilot — repo instructions
 
-> Проєктні інструкції для Copilot (repo-wide). Часто дублює/лінкує `AGENTS.md`.
+> Project instructions for Copilot (repo-wide). Often duplicates/links `AGENTS.md`.
 
-<стек · конвенції · команди>
+<stack · conventions · commands>

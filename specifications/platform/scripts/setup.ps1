@@ -1,2 +1,2 @@
 # setup (windows)
-Write-Host "setup (windows) — заповни під свій стек"
+Write-Host "setup (windows) — fill in for your own stack"

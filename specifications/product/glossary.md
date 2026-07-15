@@ -1,14 +1,14 @@
 # Glossary (Ubiquitous Language) — spec-forge
 
-Єдина термінологія проєкту: одне слово = одне значення.
+Unified project terminology: one word = one meaning.
 
-| Термін | Визначення | Контекст |
+| Term | Definition | Context |
 |--------|-----------|----------|
-| **Spec bundle** | Повна тека `specifications/` з усіма шарами — вихідний артефакт тула | вихід |
-| **Stack profile** | Плагін стеку: лінтери, task-runner, test framework, Docker base, пін версій | незалежність від стеку |
-| **Phase** | Крок життєвого циклу: spec → plan → design → tasks → validate → deploy | процес |
-| **Persona / субагент** | Роль, що наповнює артефакти: BA / SA / Designer / Developer | наповнення |
-| **Gate** | Точка підтвердження людиною між фазами | людина-в-циклі |
-| **Quality gate** | Автоматична перевірка якості самої спеки (повнота, вимірюваність, лінт контрактів) | валідація |
-| **Engine (двигун)** | Детермінована частина: скафолдинг, рендер, стан, валідація, symlinks | CLI |
-| **Deploy** | Створення root-symlinks для tool-discovery (AGENTS.md, .claude/…) | розгортання |
+| **Spec bundle** | The full `specifications/` directory with all layers — the tool's output artifact | output |
+| **Stack profile** | Stack plugin: linters, task-runner, test framework, Docker base, version pinning | stack independence |
+| **Phase** | Lifecycle step: spec → plan → design → tasks → validate → deploy | process |
+| **Persona / subagent** | Role that populates artifacts: BA / SA / Designer / Developer | content generation |
+| **Gate** | A human confirmation point between phases | human-in-the-loop |
+| **Quality gate** | Automated quality check of the spec itself (completeness, measurability, contract linting) | validation |
+| **Engine** | The deterministic part: scaffolding, rendering, state, validation, symlinks | CLI |
+| **Deploy** | Creating root symlinks for tool discovery (AGENTS.md, .claude/…) | deployment |

@@ -1,3 +1,3 @@
-"""spec-forge — генератор якісних специфікацій для будь-якого проєкту."""
+"""spec-forge — a generator of high-quality specifications for any project."""
 
 __version__ = "0.1.0"

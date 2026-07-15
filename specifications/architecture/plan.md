@@ -5,24 +5,24 @@
 **Status:** Draft
 **Author:** SA (solution-architect persona)
 
-> ЯК будуємо. Рішення-розвилки → `decisions/` (ADR).
+> HOW we build it. Decision forks → `decisions/` (ADR).
 
-## 1. Огляд рішення
-App-first **гібрид**: детермінований CLI-двигун (Python/Typer) + AI-субагенти (нативно в Claude Code)
-для наповнення. Фазовий lifecycle з людськими гейтами. Вихід — bundle `specifications/`.
-Незалежність від стеку — через підключувані **stack-profiles**.
+## 1. Solution overview
+App-first **hybrid**: a deterministic CLI engine (Python/Typer) + AI subagents (natively in Claude Code)
+for content. A phased lifecycle with human gates. The output is the `specifications/` bundle.
+Stack independence is achieved through pluggable **stack-profiles**.
 
-## 2. Архітектурний стиль
-**Modular monolith** (один CLI-процес, модулі з контрактними межами). Не мікросервіси — це локальний
-інструмент, розподіл зайвий; але `backends` і `profiles` спроєктовані як **seams** (інтерфейси) для
-майбутньої заміни. Деталі → [ADR-0001](decisions/0001-app-first-hybrid.md).
+## 2. Architectural style
+**Modular monolith** (a single CLI process, modules with contractual boundaries). Not microservices — this is a local
+tool, so distribution is unnecessary; but `backends` and `profiles` are designed as **seams** (interfaces) for
+future replacement. Details → [ADR-0001](decisions/0001-app-first-hybrid.md).
 
-## 3. Стек
-Python 3.12+ · **Typer** (CLI) · **uv** · **Ruff** · **pytest** · **Jinja2** (рендер шаблонів) ·
-**pydantic** (моделі/валідація) · **нативні субагенти Claude Code** (AI-наповнення) + `MockBackend`
-(детермінований CLI-скафолдинг) · Rich (вивід/diff, опційно).
+## 3. Stack
+Python 3.12+ · **Typer** (CLI) · **uv** · **Ruff** · **pytest** · **Jinja2** (template rendering) ·
+**pydantic** (models/validation) · **native Claude Code subagents** (AI content) + `MockBackend`
+(deterministic CLI scaffolding) · Rich (output/diff, optional).
 
-## 4. Архітектура (модулі)
+## 4. Architecture (modules)
 
 ```mermaid
 flowchart TD
@@ -38,48 +38,48 @@ flowchart TD
     VAL --> OUT
 ```
 
-- **cli/** — команди Typer (флаги + інтерактивні prompt-и, FR-011).
-- **core/lifecycle** — стан фаз, людські гейти (FR-009).
-- **core/scaffolder + renderer** — детермінований рендер шаблонів у bundle (FR-001).
-- **core/state** — персист стану фаз (`.spec-forge/state.json` у цільовому проєкті).
-- **personas/** — BA/SA/Designer/Developer: обгортки промптів, що кличуть backend (FR-003/004).
+- **cli/** — Typer commands (flags + interactive prompts, FR-011).
+- **core/lifecycle** — phase state, human gates (FR-009).
+- **core/scaffolder + renderer** — deterministic rendering of templates into the bundle (FR-001).
+- **core/state** — persistence of phase state (`.spec-forge/state.json` in the target project).
+- **personas/** — BA/SA/Designer/Developer: prompt wrappers that call the backend (FR-003/004).
 - **backends/** — `AIBackend` interface + `ClaudeAgentBackend` (seam, FR-010).
 - **profiles/** — `StackProfile` interface + python/node/go (seam, FR-007).
-- **validators/** — quality gates: повнота, вимірювані NFR, відкриті clarification, лінт контрактів (FR-006).
-- **respec/** — merge + diff для оновлення (FR-012, US-8).
-- **templates/** — вбудований bundle-шаблон (наш `specifications/`).
+- **validators/** — quality gates: completeness, measurable NFRs, open clarifications, contract linting (FR-006).
+- **respec/** — merge + diff for updates (FR-012, US-8).
+- **templates/** — the built-in bundle template (our `specifications/`).
 
-## 5. Модель даних (pydantic)
+## 5. Data model (pydantic)
 `Project` · `StackProfile` · `PhaseState(enum + status)` · `Artifact(path, kind, status)` ·
 `ValidationResult(gate, passed, gaps[])` · `InterviewAnswers` · `AIBackend(abstract)`.
-Стан життєвого циклу зберігається у `.spec-forge/state.json`.
+The lifecycle state is stored in `.spec-forge/state.json`.
 
-## 6. Інтерфейси / контракти
-- **CLI-контракт** — команди + флаги (це «API» тула). OpenAPI/AsyncAPI **не застосовні** (це CLI,
-  не сервіс) — свідоме рішення; контрактом слугують сигнатури команд і Python-інтерфейси.
+## 6. Interfaces / contracts
+- **CLI contract** — commands + flags (this is the tool's "API"). OpenAPI/AsyncAPI are **not applicable** (this is a CLI,
+  not a service) — a deliberate decision; the command signatures and Python interfaces serve as the contract.
 - `AIBackend.draft(persona, context) -> str`
 - `StackProfile.files() -> dict[path,str]` · `StackProfile.commands() -> dict[str,str]`
 - `Validator.check(bundle) -> ValidationResult`
 
 ## 7. Cross-cutting concerns
-- **Детермінізм** (NFR-002/003): рендер без `now()`/random; сортовані ключі; фіксований порядок обходу → байтова ідентичність.
-- **Ідемпотентність** (NFR-004): повторний запуск не псує; re-spec іде через diff-підтвердження.
-- **Помилки:** явні exit codes; блокери на гейтах зупиняють lifecycle.
-- **Безпека** (NFR-007): не логувати вміст промптів із секретами; не комітати `.env`; AI-виклики лише з дозволу.
-- **Логи:** structured, `--verbose`.
+- **Determinism** (NFR-002/003): rendering without `now()`/random; sorted keys; fixed traversal order → byte-for-byte identity.
+- **Idempotency** (NFR-004): a repeat run does no damage; re-spec goes through diff confirmation.
+- **Errors:** explicit exit codes; blockers at gates halt the lifecycle.
+- **Security** (NFR-007): do not log prompt content containing secrets; do not commit `.env`; AI calls only with permission.
+- **Logs:** structured, `--verbose`.
 
-## 8. Тестова стратегія
-- **Unit** — scaffolder/renderer/validators/profiles (детерміновані).
-- **Golden tests** — `init` з фіксованими входами → порівняння з еталонним bundle (SC-002/005).
-- **Contract tests** — кожен StackProfile/Backend/Validator відповідає своєму інтерфейсу (NFR-005).
-- **AI-фази** — мок `AIBackend` у детермінованих тестах; окремі опційні live-smoke.
-- **CI-matrix** — ubuntu/macos/windows (NFR-002).
+## 8. Test strategy
+- **Unit** — scaffolder/renderer/validators/profiles (deterministic).
+- **Golden tests** — `init` with fixed inputs → comparison against a reference bundle (SC-002/005).
+- **Contract tests** — each StackProfile/Backend/Validator conforms to its interface (NFR-005).
+- **AI phases** — mock `AIBackend` in deterministic tests; separate optional live-smoke.
+- **CI matrix** — ubuntu/macos/windows (NFR-002).
 
-## 9. Ризики
-- LLM-варіативність у фазах наповнення → мітигація: строгі промпти + валідатори + людський гейт.
-- Складність re-spec merge → почати з diff + ручне підтвердження, без авто-merge.
+## 9. Risks
+- LLM variability in content phases → mitigation: strict prompts + validators + human gate.
+- Complexity of re-spec merge → start with diff + manual confirmation, without auto-merge.
 
-## 10. Наступне (SA-артефакти, не в цьому інкременті)
-- `threat-model.md` (STRIDE — обмежено для локального CLI: секрети, виконання команд профілів).
-- `observability.md` (для CLI — здебільшого logs + exit codes).
-- `traceability-matrix.md` — засіється на фазі tasks.
+## 10. Next (SA artifacts, not in this increment)
+- `threat-model.md` (STRIDE — limited for a local CLI: secrets, execution of profile commands).
+- `observability.md` (for a CLI — mostly logs + exit codes).
+- `traceability-matrix.md` — seeded during the tasks phase.

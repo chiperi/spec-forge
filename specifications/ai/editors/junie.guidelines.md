@@ -1,3 +1,3 @@
 # Junie guidelines (JetBrains)
 
-<правила проєкту для Junie>
+<project rules for Junie>

@@ -5,199 +5,199 @@
 **Status:** Ready (BA gate passed)
 **Author:** BA (business-analyst persona)
 
-> BA-фаза: ЩО і НАВІЩО. Технічне «як» — у `../../../architecture/plan.md` (SA-фаза).
+> BA phase: WHAT and WHY. The technical "how" lives in `../../../architecture/plan.md` (SA phase).
 
 ---
 
 ## 1. Problem & context
 
-Команди, що будують софт з AI-агентами, пишуть спеки **ад-хок і непослідовно**: промпти
-викидаються, формат різниться між ОС і між інструментами (Claude/Cursor/Copilot), а на складних
-проєктах бракує NFR у числах, контрактів, threat-моделі, traceability. Немає єдиного способу
-надійно отримати **якісну, портовану, AI- та OS-friendly специфікацію** під будь-який стек.
+Teams building software with AI agents write specs **ad hoc and inconsistently**: prompts
+get thrown away, the format differs across OSes and across tools (Claude/Cursor/Copilot), and on complex
+projects there is a lack of quantified NFRs, contracts, threat models, and traceability. There is no single way
+to reliably produce a **high-quality, portable, AI- and OS-friendly specification** for any stack.
 
 ## 2. Goals / Non-Goals
 
 **Goals**
-- Згенерувати повний, якісний бандл `specifications/` для **будь-якого** проєкту й стеку.
-- Гібрид: детермінована структура (двигун) + AI-наповнення змістом (субагенти).
-- Перевіряти якість **самої спеки** (повнота, вимірюваність) через quality gates.
-- Портованість: однаковий результат на різних ОС і сумісність з різними AI-інструментами.
+- Generate a complete, high-quality `specifications/` bundle for **any** project and stack.
+- Hybrid: deterministic structure (engine) + AI-generated content (subagents).
+- Check the quality of **the spec itself** (completeness, measurability) through quality gates.
+- Portability: identical results across OSes and compatibility with different AI tools.
 
 **Non-Goals**
-- ❌ Не пише прикладний код (це downstream / Developer).
-- ❌ Не система керування проєктами/задачами загального призначення.
-- ❌ Не привʼязаний до одного стеку чи одного AI-вендора (архітектурно — через абстракції).
+- ❌ Does not write application code (that is downstream / Developer).
+- ❌ Not a general-purpose project/task management system.
+- ❌ Not tied to a single stack or a single AI vendor (architecturally — via abstractions).
 
 ---
 
 ## 3. User Scenarios & Testing
 
-### US-1 — Ініціалізація проєкту (Priority: P1)
-Як **розробник/архітектор**, я хочу запустити `spec-forge init` і пройти інтервʼю, щоб отримати
-повний каркас `specifications/`, підігнаний під мій проєкт і стек.
-- *Why P1:* без каркаса нема з чим працювати — це самодостатній MVP.
-- *Independent Test:* запуск `init` у порожній теці → валідний бандл `specifications/`.
+### US-1 — Project initialization (Priority: P1)
+As a **developer/architect**, I want to run `spec-forge init` and go through an interview, so that I get
+a complete `specifications/` skeleton tailored to my project and stack.
+- *Why P1:* without a skeleton there is nothing to work with — this is a self-sufficient MVP.
+- *Independent Test:* running `init` in an empty directory → a valid `specifications/` bundle.
 
 **Acceptance Scenarios**
-- **Given** порожня тека, **When** запускаю `init` і відповідаю на питання, **Then** створюється
-  `specifications/` з усіма шарами і застосованим stack-profile.
-- **Given** тека, де `specifications/` уже існує, **When** запускаю `init`, **Then** отримую помилку
-  й нічого не перезаписується (для оновлення — режим re-spec, US-8).
+- **Given** an empty directory, **When** I run `init` and answer the questions, **Then**
+  `specifications/` is created with all layers and the applied stack profile.
+- **Given** a directory where `specifications/` already exists, **When** I run `init`, **Then** I get an error
+  and nothing is overwritten (for updates — use re-spec mode, US-8).
 
-### US-2 — Чернетка вимог, BA (Priority: P1)
-Як **користувач**, я хочу, щоб тул провів інтервʼю й склав `product/specs/*/spec.md`, щоб вимоги
-були у EARS/Given-When-Then з **вимірюваними** success criteria.
-- *Independent Test:* після `init` → `spec-forge spec` → `spec.md` створено, валідатор ловить
-  відсутні acceptance / невимірювані критерії.
+### US-2 — Requirements draft, BA (Priority: P1)
+As a **user**, I want the tool to run an interview and compose `product/specs/*/spec.md`, so that the requirements
+are in EARS/Given-When-Then with **measurable** success criteria.
+- *Independent Test:* after `init` → `spec-forge spec` → `spec.md` is created, and the validator catches
+  missing acceptance / non-measurable criteria.
 
 **Acceptance Scenarios**
-- **Given** init виконано, **When** `spec-forge spec`, **Then** `spec.md` заповнено, а `validate`
-  позначає всі незакриті `[NEEDS CLARIFICATION]`.
+- **Given** init is done, **When** `spec-forge spec`, **Then** `spec.md` is populated, and `validate`
+  flags all open `[NEEDS CLARIFICATION]`.
 
-### US-3 — Чернетка архітектури, SA (Priority: P2)
-Як користувач, я хочу `spec-forge plan`, щоб отримати `plan.md` + ADR + контракти (OpenAPI/AsyncAPI)
-+ NFR + threat-model.
-**Acceptance:** **Given** готова spec.md, **When** `plan`, **Then** створено план з NFR у числах і
-контрактами, що проходять spectral-лінт.
+### US-3 — Architecture draft, SA (Priority: P2)
+As a user, I want `spec-forge plan`, so that I get `plan.md` + ADR + contracts (OpenAPI/AsyncAPI)
++ NFR + threat model.
+**Acceptance:** **Given** a ready spec.md, **When** `plan`, **Then** a plan is created with quantified NFRs and
+contracts that pass the spectral lint.
 
-### US-4 — Виведення задач (Priority: P2)
-Як користувач, я хочу `spec-forge tasks`, щоб отримати `delivery/tasks.md` — атомарні, трасовані задачі.
+### US-4 — Task derivation (Priority: P2)
+As a user, I want `spec-forge tasks`, so that I get `delivery/tasks.md` — atomic, traceable tasks.
 
-### US-5 — Валідація бандла (Priority: P2)
-Як користувач, я хочу `spec-forge validate`, щоб прогнати quality gates по всій спеці й побачити прогалини.
+### US-5 — Bundle validation (Priority: P2)
+As a user, I want `spec-forge validate`, so that I can run the quality gates across the whole spec and see the gaps.
 
-### US-6 — Розгортання (Priority: P3)
-Як користувач, я хочу `spec-forge deploy`, щоб отримати root-symlinks для tool-discovery.
+### US-6 — Deployment (Priority: P3)
+As a user, I want `spec-forge deploy`, so that I get root symlinks for tool discovery.
 
-### US-7 — Незалежність від стеку (Priority: P2)
-Як користувач будь-якого стеку, я хочу обрати stack-profile (python/node/go…), щоб файли `platform/`
-відповідали моєму стеку — без змін ядра тула.
+### US-7 — Stack independence (Priority: P2)
+As a user of any stack, I want to choose a stack profile (python/node/go…), so that the `platform/` files
+match my stack — without changing the tool's core.
 
-### US-8 — Оновлення наявної спеки / re-spec (Priority: P3)
-Як користувач, я хочу оновити наявний бандл (`spec-forge <phase> --update`), щоб внести зміни,
-не втративши ручних правок.
-**Acceptance:** **Given** наявний бандл з ручними правками, **When** запускаю re-spec, **Then**
-зміни змерджено, ручні правки збережено, а перед записом показано diff на підтвердження.
+### US-8 — Updating an existing spec / re-spec (Priority: P3)
+As a user, I want to update an existing bundle (`spec-forge <phase> --update`), so that I can make changes
+without losing manual edits.
+**Acceptance:** **Given** an existing bundle with manual edits, **When** I run re-spec, **Then**
+the changes are merged, the manual edits are preserved, and a diff is shown for confirmation before writing.
 
-### US-9 — PDF-знімок для рев'ю (Priority: P3)
-Як **команда**, ми хочемо `spec-forge export`, щоб отримати єдиний PDF усіх файлів специфікації
-(з таймстемпом) — відкрити, вичитати й позначити, у яких файлах треба зміни.
-**Acceptance:** **Given** є bundle, **When** `export`, **Then** у `exports/` створюється
-`spec-forge-export-<timestamp>.pdf` з усіма текстовими файлами `specifications/`.
+### US-9 — PDF snapshot for review (Priority: P3)
+As a **team**, we want `spec-forge export`, so that we get a single PDF of all specification files
+(with a timestamp) — to open, proofread, and mark which files need changes.
+**Acceptance:** **Given** there is a bundle, **When** `export`, **Then** in `exports/` a
+`spec-forge-export-<timestamp>.pdf` is created with all text files from `specifications/`.
 
-### US-10 — Slash-команда Claude Code (Priority: P3)
-Як користувач Claude Code, я хочу викликати `/spec-forge …` у чаті, і щоб обгортка зʼявлялась/зникала
-разом із тулом.
-**Acceptance:** **Given** встановлений тул, **When** перший запуск CLI, **Then** створюється
-`~/.claude/commands/spec-forge.md`; `spec-forge command uninstall` — прибирає.
+### US-10 — Claude Code slash command (Priority: P3)
+As a Claude Code user, I want to invoke `/spec-forge …` in chat, and have the wrapper appear/disappear
+together with the tool.
+**Acceptance:** **Given** the tool is installed, **When** the CLI runs for the first time, **Then**
+`~/.claude/commands/spec-forge.md` is created; `spec-forge command uninstall` removes it.
 
-### US-11 — Аналіз наявного проєкту (Priority: P2)
-Як розробник, я хочу `spec-forge analyze <проєкт>`, щоб за наявним кодом отримати спеку (що робить)
-і рев'ю, яке **звіряє доки з кодом**: чого бракує, недоліки й дрейф (код змінився — доки ні), з
-конкретними варіантами перезапису доків.
-**Acceptance:** **Given** тека з кодом, **When** `/spec-forge analyze` (реальний зміст, нативно)
-або `spec-forge analyze` (детермінований CLI-скафолдинг), **Then** у
-`specifications/product/specs/002-existing/` створюються `spec.md` і `review.md` з посиланнями на файли.
+### US-11 — Analyzing an existing project (Priority: P2)
+As a developer, I want `spec-forge analyze <project>`, so that from existing code I get a spec (what it does)
+and a review that **reconciles the docs with the code**: what is missing, deficiencies, and drift (code changed — docs did not), with
+concrete options for rewriting the docs.
+**Acceptance:** **Given** a directory with code, **When** `/spec-forge analyze` (real content, native)
+or `spec-forge analyze` (deterministic CLI scaffolding), **Then** in
+`specifications/product/specs/002-existing/` `spec.md` and `review.md` are created with references to files.
 
-### US-12 — Підкоманди `/spec-forge` нативно, на підписці (Priority: P1)
-Як користувач Claude Max, я хочу викликати **точні підкоманди** —
-`/spec-forge spec`, `/spec-forge plan`, `/spec-forge analyze` тощо, — щоб виконати саме той
-функціонал прямо в Claude Code силами субагентів.
-**Acceptance:** **Given** встановлені команда + субагенти,
-**When** `/spec-forge plan` (або `spec`/`tasks`/`analyze`), **Then** диспетчер делегує потрібному
-субагенту й пише артефакт у `specifications/` — нативно на підписці Claude; **When** `/spec-forge validate`
-(чи `init`/`export`/`deploy`/`status`), **Then** виконується локальний CLI.
+### US-12 — `/spec-forge` subcommands natively, on the subscription (Priority: P1)
+As a Claude Max user, I want to invoke **exact subcommands** —
+`/spec-forge spec`, `/spec-forge plan`, `/spec-forge analyze`, etc. — so that I can run exactly that
+functionality right inside Claude Code via subagents.
+**Acceptance:** **Given** the command + subagents are installed,
+**When** `/spec-forge plan` (or `spec`/`tasks`/`analyze`), **Then** the dispatcher delegates to the appropriate
+subagent and writes the artifact into `specifications/` — natively on the Claude subscription; **When** `/spec-forge validate`
+(or `init`/`export`/`deploy`/`status`), **Then** the local CLI runs.
 
-### US-13 — Покроковий майстер заповнення бандла (Priority: P2)
-Як користувач Claude Code, я хочу `/spec-forge fill`, щоб **покроково** заповнити всі файли
-`specifications/`: на кожному кроці агент сам драфтить файл (з коду + **накопичених відповідей
-попередніх кроків**), я підтверджую/правлю, а **живий чеклист** (todo-панель) показує ✅/незаповнені.
-**Acceptance:** **Given** є бандл `specifications/`, **When** `/spec-forge fill`, **Then** будується
-todo-чеклист по кожному контентному файлу і по черзі кожен драфтиться (авто-чернетка) з гейтом
-підтвердження; конфіг-файли позначаються «scaffolded (skip)»; уже відоме з попередніх кроків не перепитується.
+### US-13 — Step-by-step bundle-fill wizard (Priority: P2)
+As a Claude Code user, I want `/spec-forge fill`, so that I can fill all the `specifications/` files
+**step by step**: at each step the agent drafts the file itself (from the code + **accumulated answers
+from previous steps**), I confirm/edit, and a **live checklist** (todo panel) shows ✅/unfilled.
+**Acceptance:** **Given** there is a `specifications/` bundle, **When** `/spec-forge fill`, **Then** a
+todo checklist is built for each content file and each is drafted in turn (auto-draft) with a confirmation
+gate; config files are marked "scaffolded (skip)"; anything already known from previous steps is not asked again.
 
 ### Edge Cases
-- Незакриті `[NEEDS CLARIFICATION]` **блокують** перехід до наступної фази.
-- Повторний запуск команди **ідемпотентний** (не дублює й не псує артефакти).
-- Тека не є git-репозиторієм.
-- Немає доступного AI-бекенду для фаз наповнення → зрозуміла помилка, детермінована частина працює.
-- Re-spec поверх файлу з конфліктними ручними правками → показати diff, не перезаписувати сліпо.
+- Open `[NEEDS CLARIFICATION]` items **block** moving to the next phase.
+- Re-running a command is **idempotent** (does not duplicate or corrupt artifacts).
+- The directory is not a git repository.
+- No AI backend available for the content phases → a clear error, and the deterministic part still works.
+- Re-spec over a file with conflicting manual edits → show a diff, do not overwrite blindly.
 
 ---
 
 ## 4. Requirements
 
 ### Functional Requirements
-- **FR-001:** Система ПОВИННА скафолдити бандл `specifications/` з усіма визначеними шарами.
-- **FR-002:** Система ПОВИННА проводити структуроване інтервʼю (домен, цілі, обмеження, стек, стиль архітектури).
-- **FR-003:** Система ПОВИННА складати `spec.md` персоною BA у форматі EARS / Given-When-Then.
-- **FR-004:** Система ПОВИННА складати `plan.md`, ADR, контракти (OpenAPI/AsyncAPI), NFR, threat-model персоною SA.
-- **FR-005:** Система ПОВИННА виводити атомарний, трасований список задач.
-- **FR-006:** Система ПОВИННА валідувати бандл проти quality gates (повнота, вимірювані NFR, відсутність відкритих clarification, лінт контрактів).
-- **FR-007:** Система ПОВИННА підтримувати підключувані stack-profiles **без змін ядра**.
-- **FR-008:** Система ПОВИННА розгортати root-pointers (symlinks) для tool-discovery.
-- **FR-009:** Система ПОВИННА вимагати підтвердження людини між фазами (gate).
-- **FR-010:** Реальне AI-наповнення фаз система ПОВИННА виконувати **нативно в Claude Code** через
-  рольових субагентів (`/spec-forge`, на підписці Claude). Standalone CLI надає лише
-  **детермінований `mock`-скафолдинг** через абстрактний інтерфейс `AIBackend`.
-- **FR-011:** CLI ПОВИННА підтримувати **флаги** (для автоматизації/CI) і **інтерактивні prompt-и**
-  (коли значення не задано), на базі Typer. Повноцінний TUI — поза MVP.
-- **FR-012:** Система ПОВИННА підтримувати режим **re-spec** — оновлення наявного бандла зі
-  збереженням ручних правок (merge + diff-підтвердження, без сліпого перезапису).
-- **FR-013:** Система ПОВИННА експортувати всі файли `specifications/` в **єдиний PDF** (імʼя з
-  таймстемпом, окрема тека `exports/`) для командного рев'ю.
-- **FR-014:** Система ПОВИННА автоматично реєструвати slash-команду Claude Code `/spec-forge`
-  при першому запуску (ідемпотентно) і надавати команду її прибрати; opt-out `SPEC_FORGE_NO_SLASH=1`.
-- **FR-015:** Система ПОВИННА мати brownfield-режим `analyze`: читати (обмежено) код наявного проєкту,
-  драфтити **reverse-спеку** і **рев'ю доків проти коду** — gap-документ, що фіксує чого бракує,
-  недоліки й **дрейф** (код змінився, доки — ні) та пропонує варіанти перезапису доків; in-place, код не змінюючи.
-- **FR-016:** Система ПОВИННА надавати `/spec-forge` як **диспетчер точних підкоманд** (той самий набір,
-  що й CLI): контентні (`spec`/`plan`/`tasks`/`analyze`) виконуються **нативно в Claude Code** через
-  рольових субагентів (на підписці Claude); механічні (`init`/`validate`/`export`/
-  `deploy`/`status`) делегуються локальному CLI. Людський гейт після кожної контентної фази.
-- **FR-017:** Система ПОВИННА встановлювати/прибирати рольові субагенти у `~/.claude/agents/` разом зі
-  slash-командою (вкл. `reverse-analyst`/`reviewer` для `analyze`); команда **self-upgrade** за версією.
-- **FR-018:** Система ПОВИННА надавати native-майстер `/spec-forge fill`: покрокове заповнення **всіх**
-  контентних файлів `specifications/` у режимі авто-чернетка → підтвердження, з **живим todo-чеклистом**
-  прогресу (заповнено/ні) і **накопиченням контексту** між кроками (відповіді попередніх кроків — вхід для
-  наступних). Детерміновані/конфіг-файли позначаються scaffolded (skip). Лише native (Claude Code).
+- **FR-001:** The system MUST scaffold the `specifications/` bundle with all defined layers.
+- **FR-002:** The system MUST conduct a structured interview (domain, goals, constraints, stack, architecture style).
+- **FR-003:** The system MUST compose `spec.md` via the BA persona in EARS / Given-When-Then format.
+- **FR-004:** The system MUST compose `plan.md`, ADRs, contracts (OpenAPI/AsyncAPI), NFRs, and a threat model via the SA persona.
+- **FR-005:** The system MUST derive an atomic, traceable task list.
+- **FR-006:** The system MUST validate the bundle against the quality gates (completeness, measurable NFRs, no open clarifications, contract linting).
+- **FR-007:** The system MUST support pluggable stack profiles **without core changes**.
+- **FR-008:** The system MUST deploy root pointers (symlinks) for tool discovery.
+- **FR-009:** The system MUST require human confirmation between phases (gate).
+- **FR-010:** The system MUST perform real AI content generation for the phases **natively in Claude Code** via
+  role subagents (`/spec-forge`, on the Claude subscription). The standalone CLI provides only
+  **deterministic `mock` scaffolding** through the abstract `AIBackend` interface.
+- **FR-011:** The CLI MUST support **flags** (for automation/CI) and **interactive prompts**
+  (when a value is not provided), based on Typer. A full TUI is out of scope for the MVP.
+- **FR-012:** The system MUST support **re-spec** mode — updating an existing bundle while
+  preserving manual edits (merge + diff confirmation, without blind overwriting).
+- **FR-013:** The system MUST export all `specifications/` files into a **single PDF** (name with
+  a timestamp, a dedicated `exports/` directory) for team review.
+- **FR-014:** The system MUST automatically register the Claude Code slash command `/spec-forge`
+  on first run (idempotently) and provide a command to remove it; opt-out via `SPEC_FORGE_NO_SLASH=1`.
+- **FR-015:** The system MUST have a brownfield `analyze` mode: read (in a limited way) an existing project's code,
+  draft a **reverse spec** and a **docs-vs-code review** — a gap document that records what is missing,
+  deficiencies, and **drift** (code changed, docs did not) and proposes options for rewriting the docs; in-place, without changing the code.
+- **FR-016:** The system MUST provide `/spec-forge` as a **dispatcher of exact subcommands** (the same set
+  as the CLI): content subcommands (`spec`/`plan`/`tasks`/`analyze`) run **natively in Claude Code** via
+  role subagents (on the Claude subscription); mechanical ones (`init`/`validate`/`export`/
+  `deploy`/`status`) are delegated to the local CLI. A human gate follows each content phase.
+- **FR-017:** The system MUST install/remove role subagents in `~/.claude/agents/` together with the
+  slash command (including `reverse-analyst`/`reviewer` for `analyze`); a **self-upgrade** command by version.
+- **FR-018:** The system MUST provide a native `/spec-forge fill` wizard: step-by-step filling of **all**
+  content files in `specifications/` in auto-draft → confirmation mode, with a **live todo checklist**
+  of progress (filled/not) and **context accumulation** across steps (answers from previous steps are input for
+  the next ones). Deterministic/config files are marked scaffolded (skip). Native only (Claude Code).
 
-### Non-Functional (seed; деталі → `architecture/nfr.md`)
-- **NFR-001:** Детермінований скафолдинг `init` ПОВИНЕН завершуватись < 5 с на типовому проєкті.
-- **NFR-002:** Вихід ПОВИНЕН бути ідентичним на macOS/Linux/Windows за однакових входів.
+### Non-Functional (seed; details → `architecture/nfr.md`)
+- **NFR-001:** The deterministic `init` scaffolding MUST complete in < 5 s on a typical project.
+- **NFR-002:** The output MUST be identical on macOS/Linux/Windows given identical inputs.
 
 ### Key Entities
-- **Project** — цільовий проєкт (тека + метадані).
-- **StackProfile** — плагін стеку (лінтери, task-runner, test framework, Docker, пін версій).
+- **Project** — the target project (directory + metadata).
+- **StackProfile** — a stack plugin (linters, task-runner, test framework, Docker, version pinning).
 - **Phase** — spec / plan / design / tasks / validate / deploy.
-- **Persona** — BA / SA / Designer / Developer (субагент).
-- **Artifact** — файл бандла (spec.md, plan.md, ADR, контракт…).
-- **ValidationResult** — результат quality gate (pass/fail + прогалини).
-- **AIBackend** — абстракція над бекендом наповнення (єдина реалізація: `MockBackend`; реальне наповнення — нативні субагенти Claude Code).
+- **Persona** — BA / SA / Designer / Developer (subagent).
+- **Artifact** — a bundle file (spec.md, plan.md, ADR, contract…).
+- **ValidationResult** — a quality-gate result (pass/fail + gaps).
+- **AIBackend** — an abstraction over the content-generation backend (single implementation: `MockBackend`; real content generation — native Claude Code subagents).
 
 ---
 
-## 5. Success Criteria (вимірювані)
+## 5. Success Criteria (measurable)
 
-- **SC-001:** Новий користувач отримує **валідований** бандл спеки за < 30 хв для середнього проєкту.
-- **SC-002:** 100% згенерованих бандлів проходять **структурну** валідацію (жодного відсутнього обовʼязкового файлу).
-- **SC-003:** У `spec.md` — **0** незакритих `[NEEDS CLARIFICATION]` перед фазою plan.
-- **SC-004:** Працює для **≥3 стеків** (python/node/go) через профілі **без змін ядра**.
-- **SC-005:** Однакові входи → **байтово ідентична** структура на 3 ОС.
+- **SC-001:** A new user gets a **validated** spec bundle in < 30 min for a medium project.
+- **SC-002:** 100% of generated bundles pass **structural** validation (no missing mandatory file).
+- **SC-003:** In `spec.md` — **0** open `[NEEDS CLARIFICATION]` before the plan phase.
+- **SC-004:** Works for **≥3 stacks** (python/node/go) via profiles **without core changes**.
+- **SC-005:** Identical inputs → a **byte-identical** structure on 3 OSes.
 
 ---
 
 ## 6. Assumptions
-- Реальне наповнення доступне через Claude Code (`/spec-forge`, субагенти); CLI працює офлайн детерміновано.
-- Формат бандла = наш шаблон `specifications/`.
-- Користувач апрувить кожну фазу перед наступною.
+- Real content generation is available via Claude Code (`/spec-forge`, subagents); the CLI works offline and deterministically.
+- The bundle format = our `specifications/` template.
+- The user approves each phase before the next one.
 
 ## 7. Open Questions
 
-_Блокери BA-фази закриті (2026-07-09):_
-- ✅ **AI-бекенд:** реальне наповнення — нативні субагенти Claude Code; CLI — детермінований mock (FR-010).
-- ✅ **Інтерфейс:** флаги + інтерактивні prompt-и, Typer (FR-011).
-- ✅ **Re-spec:** підтримуємо оновлення наявного бандла (FR-012, US-8).
+_BA-phase blockers closed (2026-07-09):_
+- ✅ **AI backend:** real content generation — native Claude Code subagents; CLI — deterministic mock (FR-010).
+- ✅ **Interface:** flags + interactive prompts, Typer (FR-011).
+- ✅ **Re-spec:** we support updating an existing bundle (FR-012, US-8).
 
-Немає незакритих `[NEEDS CLARIFICATION]` → **гейт BA → SA пройдено.**
+No open `[NEEDS CLARIFICATION]` → **the BA → SA gate is passed.**

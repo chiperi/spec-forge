@@ -19,7 +19,7 @@ def test_analyze_both(tmp_path):
     base = src / "specifications" / "product" / "specs" / "002-existing"
     assert (base / "spec.md").exists()
     assert (base / "review.md").exists()
-    assert "main.py" in (base / "spec.md").read_text(encoding="utf-8")  # mock ехоїть код
+    assert "main.py" in (base / "spec.md").read_text(encoding="utf-8")  # mock echoes the code
 
 
 def test_analyze_only_review(tmp_path):

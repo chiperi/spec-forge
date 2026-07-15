@@ -1,3 +1,3 @@
-# Research: <назва фічі>
+# Research: <feature name>
 
-> Дослідження перед реалізацією: варіанти, бенчмарки, обмеження.
+> Pre-implementation research: options, benchmarks, constraints.
