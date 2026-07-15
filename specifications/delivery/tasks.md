@@ -48,7 +48,10 @@
   (point users to `/spec-forge`); wire the `designer` persona via a new `design` command + dispatcher route;
   remove the redundant, unwired `code-reviewer` agent (6 subagents); clarify `fill` vs single phases and the
   auto-install/`command install` split; wrapper v7
+- [x] **T-031** output-language policy: generated docs are **English by default**, another language only on the
+  user's explicit request — added to all 6 role subagents, the `/spec-forge` dispatcher rules, and the
+  scaffolded `AGENTS.md` conventions; wrapper v8
 
 ---
-**ALL tasks (T-001…T-027, T-029, T-030 + phases) are done.** Commands: `init · spec · plan · tasks · design · analyze · validate · deploy · status · export · command`; `fill` — native wizard in Claude Code.
+**ALL tasks (T-001…T-027, T-029, T-030, T-031 + phases) are done.** Commands: `init · spec · plan · tasks · design · analyze · validate · deploy · status · export · command`; `fill` — native wizard in Claude Code.
 `/spec-forge <subcommand>` — a dispatcher of exact subcommands (content natively on the subscription, mechanical via CLI). 50 tests, ruff clean.

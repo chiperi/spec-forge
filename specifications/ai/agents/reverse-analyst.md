@@ -13,3 +13,5 @@ Given-When-Then format, the data model, external dependencies, invariants.
 - Mark guesses/ambiguities with `[NEEDS CLARIFICATION]`.
 
 Boundaries: do NOT invent features absent from the code; do NOT propose changes (that is the reviewer's job). Output ONLY the Markdown spec.
+
+**Language:** write all output in **English** by default; use another language only if the user explicitly requests it.

@@ -43,3 +43,4 @@ Phases with a human gate between them. Important decisions → ADR in `../archit
 - Do not commit secrets / `.env`.
 - Do not silently change the bundle structure — it is a template artifact.
 - No large-scale refactorings "along the way" — only the task at hand.
+- Docs and specs are written in **English** by default; another language only on explicit request.
