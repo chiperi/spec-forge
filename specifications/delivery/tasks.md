@@ -42,7 +42,9 @@
 - [x] **T-025** docs: ADR-0006 + README-секція
 - [x] **T-026** субагенти `reverse-analyst` + `reviewer` (бандл `ai/agents/`) для нативного `/spec-forge analyze`
 - [x] **T-027** PDF-експорт: іконки-емодзі через fallback-шрифт `NotoEmoji.ttf` (monochrome, OFL) + `set_fallback_fonts` (ADR-0003)
+- [x] **T-029** `/spec-forge fill` — native-майстер покрокового заповнення всіх файлів `specifications/`
+  (авто-чернетка → підтвердження, живий todo-чеклист, накопичення контексту між кроками); wrapper v6 + todo-інструменти (FR-018/US-13)
 
 ---
-**ВСІ задачі (T-001…T-027 + фази) виконано.** Команди: `init · spec · plan · tasks · analyze · validate · deploy · status · export · command`.
-`/spec-forge <підкоманда>` — диспетчер точних підкоманд (контент нативно на підписці, механічні через CLI). 48 тестів, ruff clean.
+**ВСІ задачі (T-001…T-027, T-029 + фази) виконано.** Команди: `init · spec · plan · tasks · analyze · validate · deploy · status · export · command`; `fill` — native-майстер у Claude Code.
+`/spec-forge <підкоманда>` — диспетчер точних підкоманд (контент нативно на підписці, механічні через CLI). 49 тестів, ruff clean.

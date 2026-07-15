@@ -6,10 +6,10 @@ complete, portable, **AI- & OS-friendly `specifications/` bundle**: the source o
 spec-forge is a **hybrid**: a deterministic engine does the boring, must-be-reproducible work
 (scaffolding, lifecycle, validation, PDF export, tool-discovery), while **AI role subagents** (BA / SA /
 Designer / Developer + reverse-analyst / reviewer) fill the *content* — **natively inside Claude Code, on
-your subscription**. No API keys, no paid backend: the standalone CLI is fully offline and free; the
+your subscription**. No paid backend: the standalone CLI is fully offline and free; the
 real drafting happens through the `/spec-forge` slash command.
 
-> `Python 3.12+` · `Typer` · `uv` · `Jinja2` · `pydantic` · `fpdf2` · `pytest` + `Ruff` · 48 passing tests
+> `Python 3.12+` · `Typer` · `uv` · `Jinja2` · `pydantic` · `fpdf2` · `pytest` + `Ruff` · 49 passing tests
 
 ---
 
@@ -22,6 +22,7 @@ real drafting happens through the `/spec-forge` slash command.
 - [Command reference](#command-reference)
 - [Lifecycle & state](#lifecycle--state)
 - [Claude Code integration — the `/spec-forge` dispatcher](#claude-code-integration--the-spec-forge-dispatcher)
+- [Guided `fill` wizard](#guided-fill-wizard)
 - [Brownfield: `analyze` in depth](#brownfield-analyze-in-depth)
 - [Quality gates](#quality-gates)
 - [Stack profiles](#stack-profiles)
@@ -273,14 +274,14 @@ classes:
 ```mermaid
 flowchart TD
     U["/spec-forge subcommand"] --> R{first token}
-    R -->|spec · plan · tasks · analyze| CN["Content<br/>native subagents via Task<br/>on your subscription"]
+    R -->|spec · plan · tasks · analyze · fill| CN["Content<br/>native subagents via Task<br/>on your subscription"]
     R -->|init · validate · export · deploy · status| ME["Mechanical<br/>local CLI<br/>deterministic · free"]
     CN --> G["🚦 human gate after each content phase"]
     ME --> O["show CLI output"]
 ```
 
-- **Content** subcommands (`spec`, `plan`, `tasks`, `analyze`) are generated **natively in Claude Code**
-  by delegating to a role subagent — no CLI call, no API key.
+- **Content** subcommands (`spec`, `plan`, `tasks`, `analyze`, `fill`) are generated **natively in Claude
+  Code** by delegating to a role subagent — no CLI call, on your subscription.
 - **Mechanical** subcommands (`init`, `validate`, `export`, `deploy`, `status`) shell out to the local
   `spec-forge` CLI and show its output.
 
@@ -290,6 +291,7 @@ flowchart TD
 | `/spec-forge plan` | **native** → `solution-architect` → `plan.md` + ADRs + contracts |
 | `/spec-forge tasks` | **native** → `developer` → `delivery/tasks.md` |
 | `/spec-forge analyze [dir]` | **native** → `reverse-analyst` + `reviewer` → `002-existing/` |
+| `/spec-forge fill` | **native wizard** — step through every `specifications/` file (auto-draft → confirm) with a live to-do checklist |
 | `/spec-forge init · validate · export · deploy · status` | runs the local **CLI** (deterministic, free) |
 
 **Housekeeping**
@@ -303,6 +305,39 @@ flowchart TD
 
 > Python/uv has no uninstall hooks, so `uv tool uninstall` can't auto-remove the command — run
 > `spec-forge command uninstall`.
+
+---
+
+## Guided `fill` wizard
+
+`/spec-forge fill` walks the **entire** `specifications/` bundle one file at a time. For each content
+file it **auto-drafts** from your code plus everything you confirmed on previous steps, then stops for
+your review; a **live to-do checklist** (the task panel) tracks filled vs pending. Deterministic config
+files are marked *scaffolded (skip)*. Native-only — the terminal CLI can't render the checklist.
+
+```mermaid
+sequenceDiagram
+    actor U as You
+    participant W as /spec-forge fill
+    participant T as To-do checklist
+    participant FS as specifications/
+    U->>W: /spec-forge fill
+    W->>FS: scan bundle → list content files
+    W->>T: create one item per file (☐)
+    loop each file · dependency order
+        W->>T: item → in progress
+        W->>FS: read code + prior answers → auto-draft
+        W-->>U: show draft · confirm / edit 🚦
+        U-->>W: confirm or corrections
+        W->>FS: write file
+        W->>T: item → ✅ (answers carried forward)
+    end
+    W->>U: run validate → gates green
+```
+
+Order: `00-constitution.md` → `product/specs/**/spec.md` → `plan.md` → `decisions/` → `contracts/` →
+`nfr.md` → `tasks.md` → `design/` → `roles/` → `knowledge/` → `README`. Each answer feeds the next step,
+so the wizard never asks the same thing twice.
 
 ---
 

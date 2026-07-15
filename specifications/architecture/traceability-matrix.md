@@ -26,5 +26,6 @@
 | FR-015 / US-11 (analyze brownfield) | ADR-0005 | T-021 | test_codescan, test_cli_analyze | ✅ |
 | FR-016 / US-12 (диспетчер підкоманд, нативно на підписці) | ADR-0006 | T-022, T-026 | test_wrapper_is_subcommand_dispatcher | ✅ |
 | FR-017 (install/remove 7 субагентів + self-upgrade) | ADR-0006 | T-023, T-026 | test_install_writes_command_and_agents, test_command_self_upgrades_on_old_version, test_bundled_agents_enumeration | ✅ |
+| FR-018 / US-13 (майстер `fill`: покрокове заповнення + todo-чеклист) | ADR-0006 | T-029 | test_wrapper_has_fill_wizard | ✅ |
 
 Легенда: ✅ покрито · 🟡 частково (mock/stub) · ⬜ ще ні.
