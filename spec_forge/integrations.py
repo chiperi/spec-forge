@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import NamedTuple
 
 WRAPPER_NAME = "spec-forge.md"
-WRAPPER_VERSION = 7
+WRAPPER_VERSION = 8
 AGENTS_SRC = Path(__file__).parent / "templates" / "bundle" / "ai" / "agents"
 
 _WRAPPER = """\
@@ -25,7 +25,7 @@ description: Exact spec-forge subcommands natively in Claude Code (spec/plan/tas
 argument-hint: <subcommand> [arguments] — spec | plan | tasks | design | analyze | fill | init | validate | export | deploy | status
 allowed-tools: Task, Read, Write, Edit, Glob, Grep, Bash, TodoWrite, TaskCreate, TaskUpdate, TaskList
 ---
-<!-- spec-forge-command v7 -->
+<!-- spec-forge-command v8 -->
 
 You are the **dispatcher** `/spec-forge <subcommand> [arguments]`. The **first token** of `$ARGUMENTS` is the
 subcommand (the same set as in the `spec-forge` CLI). Run EXACTLY the corresponding functionality in the
@@ -94,6 +94,8 @@ Show the list of subcommands above (one description line per subcommand) and sto
 
 Rules: when delegating, provide a self-contained brief (the subagent doesn't see this dialogue); a human gate after
 each content phase; a repeat run = update, not a duplicate; don't change the project's code without a separate request.
+**Language:** write all generated artifacts (specs, plans, tasks, ADRs, reviews…) in **English** by default;
+use another language only if the user **explicitly** requests it — and then pass that request into the subagent brief.
 """
 
 

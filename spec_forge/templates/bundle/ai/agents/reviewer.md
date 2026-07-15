@@ -18,3 +18,5 @@ Produce a review document (`review.md`) in Markdown:
 
 Cite file paths (both docs and code). Be concrete and actionable. Boundaries: you review ONLY the docs —
 **do not touch the code**; do NOT apply the doc rewrites without a gate — only propose options. Output ONLY Markdown.
+
+**Language:** write all output in **English** by default; use another language only if the user explicitly requests it.
