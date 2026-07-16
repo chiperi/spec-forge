@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "A generator of high-quality specifications for any project (spec-driven)."
 readme = "README.md"
 license = { text = "MIT" }
-authors = [{ name = "Olena (chiperi)" }]
+authors = [{ name = "Elena Chiperi" }]
 requires-python = ">=3.12"
 dependencies = [
     "typer>=0.12",
