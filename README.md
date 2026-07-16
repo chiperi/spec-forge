@@ -1,5 +1,12 @@
 # spec-forge
 
+[![CI](https://github.com/chiperi/spec-forge/actions/workflows/ci.yml/badge.svg)](https://github.com/chiperi/spec-forge/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)
+![Lint: Ruff](https://img.shields.io/badge/lint-ruff-000000.svg)
+
+> **Personal project.** Built and maintained by one person as a personal tool, shared in case it's useful to others. Provided **as-is** under the [MIT license](LICENSE) — no warranty, best-effort support. To report an issue see [SECURITY.md](SECURITY.md); to contribute see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 **Stack-agnostic, spec-driven development CLI.** Turn any project — greenfield or existing — into a
 complete, portable, **AI- & OS-friendly `specifications/` bundle**: the source of truth *before* code.
 
