@@ -32,6 +32,7 @@ real drafting happens through the `/spec-forge` slash command.
 - [Configuration](#configuration)
 - [Develop](#develop)
 - [Design decisions](#design-decisions)
+- [License](#license)
 
 ---
 
@@ -527,3 +528,9 @@ spec-driven process (**dogfooding**). Key choices are recorded as ADRs in
 - **ADR-0004** — Claude Code slash integration.
 - **ADR-0005** — brownfield `analyze` (bounded reader + reverse spec + review).
 - **ADR-0006** — native `/spec-forge` dispatcher over exact subcommands (on your subscription).
+
+---
+
+## License
+
+[MIT](LICENSE) © 2026 Olena (chiperi).
