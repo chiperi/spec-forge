@@ -533,4 +533,4 @@ spec-driven process (**dogfooding**). Key choices are recorded as ADRs in
 
 ## License
 
-[MIT](LICENSE) © 2026 Olena (chiperi).
+[MIT](LICENSE) © 2026 Elena Chiperi.
